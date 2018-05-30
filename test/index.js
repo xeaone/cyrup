@@ -1,4 +1,4 @@
-import Cyrup from '../modules/cyrup.js';
+import Cyrup from './cyrup.min.js';
 
 Promise.resolve().then(function () {
 	return Cyrup.encrypt('password', 'hello world');

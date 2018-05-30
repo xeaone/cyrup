@@ -1,9 +1,10 @@
 {
 	"name": "cyrup",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Browser crypto library",
 	"main": "dis/cyrup.min.js",
 	"scripts": {
+		"t": "muleify serve test",
 		"b": "muleify pack -m src/cyrup.js dis/cyrup.min.js"
 	},
 	"repository": {

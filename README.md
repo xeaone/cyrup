@@ -4,7 +4,7 @@
 Browser Crypto Library.
 
 ## Install
-`npm i cryup --save`
+`npm i cyrup --save`
 
 ## Example
 ```js
