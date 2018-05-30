@@ -1,0 +1,22 @@
+{
+	"name": "cyrup",
+	"version": "0.0.1",
+	"description": "Browser crypto library",
+	"main": "dis/cyrup.min.js",
+	"scripts": {
+		"b": "muleify pack -m src/cyrup.js dis/cyrup.min.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/AlexanderElias/cyrup.git"
+	},
+	"keywords": [
+		"crypto"
+	],
+	"author": "Alexander Elias",
+	"license": "MPL-2.0",
+	"bugs": {
+		"url": "https://github.com/AlexanderElias/cyrup/issues"
+	},
+	"homepage": "https://github.com/AlexanderElias/cyrup#readme"
+}
