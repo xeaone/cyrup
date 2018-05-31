@@ -10,3 +10,11 @@ Promise.resolve().then(function () {
 }).catch(function (error) {
 	console.error(error);
 });
+
+Promise.resolve().then(function () {
+	return Cyrup.hasher('hello world');
+}).then(function (data) {
+	console.log(data);
+}).catch(function (error) {
+	console.error(error);
+});

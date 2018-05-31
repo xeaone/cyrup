@@ -26,16 +26,17 @@ export default {
 		return Promise.resolve().then(function () {
 
 			var bytes = new Uint8Array(buffer);
-			var hexadecimals = [];
+			var hexes = [];
 
 			for(var i = 0, l = bytes.length; i < l; i++) {
-				var hex = bytes[i].toString(16);
-				var paddedHex = ('00' + hex).slice(-2);
 
-				hexadecimals.push(paddedHex);
+				var hex = bytes[i].toString(16);
+				var pad = ('00' + hex).slice(-2);
+
+				hexes.push(pad);
 			}
 
-			return hexadecimals.join('');
+			return hexes.join('');
 		});
 	},
 
@@ -85,6 +86,21 @@ export default {
 			}
 
 			return out;
+		});
+	},
+
+	hasher: function (data, options) {
+		var self = this;
+
+		options = options || {};
+		options.type = options.type || 'SHA-256';
+
+		return Promise.resolve().then(function () {
+			return self.stringToBuffer(data);
+		}).then(function (dataBuffer) {
+			return window.crypto.subtle.digest(options.type, dataBuffer);
+		}).then(function (hashBuffer) {
+			return self.bufferToHex(hashBuffer);
 		});
 	},
 
@@ -138,7 +154,6 @@ export default {
 		}).then(function (key) {
 			return window.crypto.subtle.decrypt(options, key, bufferEncrypted);
 		}).then(function (decrypted) {
-			console.log(decrypted);
 			return self.bufferToString(decrypted);
 		});
 	}
