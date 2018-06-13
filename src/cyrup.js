@@ -1,7 +1,7 @@
 
 export default {
 
-	hexToBuffer: function (hex) {
+	hexToBuffer (hex) {
 		return Promise.resolve().then(function () {
 
 			if (typeof hex !== 'string') {
@@ -12,9 +12,9 @@ export default {
 				throw new RangeError('Expected string to be an even number of characters');
 			}
 
-			var bytes = new Uint8Array(hex.length / 2);
+			let bytes = new Uint8Array(hex.length / 2);
 
-			for (var i = 0, l = hex.length; i < l; i += 2) {
+			for (let i = 0, l = hex.length; i < l; i += 2) {
 				bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
 			}
 
@@ -22,16 +22,16 @@ export default {
 		});
 	},
 
-	bufferToHex: function (buffer) {
+	bufferToHex (buffer) {
 		return Promise.resolve().then(function () {
 
-			var bytes = new Uint8Array(buffer);
-			var hexes = [];
+			let bytes = new Uint8Array(buffer);
+			let hexes = [];
 
-			for(var i = 0, l = bytes.length; i < l; i++) {
+			for(let i = 0, l = bytes.length; i < l; i++) {
 
-				var hex = bytes[i].toString(16);
-				var pad = ('00' + hex).slice(-2);
+				let hex = bytes[i].toString(16);
+				let pad = ('00' + hex).slice(-2);
 
 				hexes.push(pad);
 			}
@@ -40,11 +40,11 @@ export default {
 		});
 	},
 
-	stringToBuffer: function (string) {
+	stringToBuffer (string) {
 		return Promise.resolve().then(function () {
-			var bytes = new Uint8Array(string.length);
+			let bytes = new Uint8Array(string.length);
 
-			for (var i = 0, l = string.length; i < l; i++) {
+			for (let i = 0, l = string.length; i < l; i++) {
 				bytes[i] = string.charCodeAt(i);
 			}
 
@@ -52,14 +52,24 @@ export default {
 		});
 	},
 
-	bufferToString: function (buffer) {
-		return Promise.resolve().then(function () {
-			var char2, char3, c;
-			var bytes = new Uint8Array(buffer);
+    bufferToString (buffer) {
+        let data = '';
+        
+        for (let i = 0; i < buffer.byteLength; i++) {
+             data += String.fromCharCode(buffer[i]);
+        }
 
-			var i = 0;
-			var out = '';
-			var length = bytes.length;
+        return data;
+    },
+
+	/*bufferToString: function (buffer) {
+		return Promise.resolve().then(function () {
+			let char2, char3, c;
+			let bytes = new Uint8Array(buffer);
+
+			let i = 0;
+			let out = '';
+			let length = bytes.length;
 
 			while (i < length) {
 
@@ -87,10 +97,10 @@ export default {
 
 			return out;
 		});
-	},
+	},*/
 
-	hasher: function (data, options) {
-		var self = this;
+	hasher (data, options) {
+		let self = this;
 
 		options = options || {};
 		options.type = options.type || 'SHA-256';
@@ -104,10 +114,10 @@ export default {
 		});
 	},
 
-	encrypt: function (password, text) {
-		var self = this;
-		var vector = window.crypto.getRandomValues(new Uint8Array(12));
-		var options = { name: 'AES-GCM', iv: vector };
+	encrypt (password, text) {
+		let self = this;
+		let vector = window.crypto.getRandomValues(new Uint8Array(12));
+		let options = { name: 'AES-GCM', iv: vector };
 
 		return Promise.resolve().then(function () {
 			return self.stringToBuffer(password);
@@ -130,14 +140,14 @@ export default {
 		});
 	},
 
-	decrypt: function (password, text) {
-		var self = this;
-		var texts = text.split(':');
-		var options = { name: 'AES-GCM' };
+	decrypt (password, text) {
+		let self = this;
+		let texts = text.split(':');
+		let options = { name: 'AES-GCM' };
 
-		var hexVector = texts[0];
-		var hexEncrypted = texts[1];
-		var bufferPassword, bufferEncrypted;
+		let hexVector = texts[0];
+		let hexEncrypted = texts[1];
+		let bufferPassword, bufferEncrypted;
 
 		return Promise.all([
 			self.hexToBuffer(hexVector),

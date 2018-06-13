@@ -1,6 +1,6 @@
 {
 	"name": "cyrup",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Browser crypto library",
 	"main": "dis/cyrup.min.js",
 	"scripts": {
@@ -14,13 +14,12 @@
 	"keywords": [
 		"crypto"
 	],
+    "email": "alex.steven.elias@gmail.com",
 	"author": "Alexander Elias",
 	"license": "MPL-2.0",
 	"bugs": {
 		"url": "https://github.com/AlexanderElias/cyrup/issues"
 	},
 	"homepage": "https://github.com/AlexanderElias/cyrup#readme",
-	"devDependencies": {
-		"muleify": "^4.0.8"
-	}
+	"devDependencies": {}
 }
