@@ -1,8 +1,8 @@
 {
 	"name": "cyrup",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "Browser crypto library",
-	"main": "dis/cyrup.min.js",
+	"main": "dis/cyrup.node.js",
 	"scripts": {
 		"t": "cp dis/cyrup.min.js test/. && muleify serve test",
 		"b": "node build.js"
