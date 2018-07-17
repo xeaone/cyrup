@@ -31,8 +31,8 @@ module.exports = {
 		data.hashBytes = data.hashBytes || self.HASH_BYTES;
 		data.saltBytes = data.saltBytes || self.SALT_BYTES;
 
-		const salt = await RandomBytes(data.saltBytes);
-		const hash = await Pbkdf2(password, salt, data.rounds, data.hashBytes, data.hashType);
+		const salt = await self.randomBytes(data.saltBytes);
+		const hash = await self.pbkdf2(password, salt, data.rounds, data.hashBytes, data.hashType);
 
 		const buffer = Buffer.alloc(hash.length + salt.length + 8);
 
@@ -63,7 +63,7 @@ module.exports = {
 		const salt = combined.slice(8, saltBytes + 8);
 		const hash = combined.toString('binary', saltBytes + 8);
 
-		const verify = await Pbkdf2(password, salt, rounds, hashBytes, data.hashType);
+		const verify = await self.pbkdf2(password, salt, rounds, hashBytes, data.hashType);
 
 		return verify.toString('binary') === hash;
 	},
@@ -75,7 +75,7 @@ module.exports = {
 		data.bytes = data.bytes || self.SECRET_BYTES;
 		data.encoding = data.encoding || self.ENCODING;
 
-		const bytes = await RandomBytes(data.bytes);
+		const bytes = await self.randomBytes(data.bytes);
 
 		return bytes.toString(data.encoding);
 	},
@@ -102,9 +102,9 @@ module.exports = {
 		data.saltBytes = data.saltBytes || self.SALT_BYTES;
 		data.vectorBytes = data.vectorBytes || self.VECTOR_BYTES;
 
-		const salt = await RandomBytes(data.saltBytes);
-		const vector = await RandomBytes(data.vectorBytes);
-		const key = await Pbkdf2(password, salt, data.rounds, data.hashBytes, data.hashType);
+		const salt = await self.randomBytes(data.saltBytes);
+		const vector = await self.randomBytes(data.vectorBytes);
+		const key = await self.pbkdf2(password, salt, data.rounds, data.hashBytes, data.hashType);
 		const cipher = Crypto.createCipheriv(data.algorithm, key, vector);
 
 		// const data = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
@@ -130,7 +130,7 @@ module.exports = {
 		const salt = Buffer.from(encrypteds[2], data.encoding);
 		const tag = Buffer.from(encrypteds[3], data.encoding);
 
-		const key = await Pbkdf2(password, salt, data.rounds, data.hashBytes, data.hashType);
+		const key = await self.pbkdf2(password, salt, data.rounds, data.hashBytes, data.hashType);
 		const decipher = Crypto.createDecipheriv(data.algorithm, key, vector);
 
 		decipher.setAuthTag(tag);
