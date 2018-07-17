@@ -72,6 +72,43 @@ export default {
         return data;
     },
 
+	/*bufferToString: function (buffer) {
+		return Promise.resolve().then(function () {
+			let char2, char3, c;
+			let bytes = new Uint8Array(buffer);
+
+			let i = 0;
+			let out = '';
+			let length = bytes.length;
+
+			while (i < length) {
+
+				c = bytes[i++];
+
+				switch (c >> 4) {
+					case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+						// 0xxxxxxx
+						out += String.fromCharCode(c);
+					break;
+					case 12: case 13:
+						// 110x xxxx 10xx xxxx
+						char2 = bytes[i++];
+						out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+					break;
+					case 14:
+						// 1110 xxxx 10xx xxxx 10xx xxxx
+						char2 = bytes[i++];
+						char3 = bytes[i++];
+						out += String.fromCharCode(((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0));
+					break;
+				}
+
+			}
+
+			return out;
+		});
+	},*/
+
 	generateKey (password, salt, iterations, length, hash) {
 		const self = this;
 
@@ -120,21 +157,22 @@ export default {
 		return Promise.resolve().then(function () {
 			return self.stringToBuffer(password);
 		}).then(function (passwordBuffer) {
+			// return window.crypto.subtle.digest(self.HASH, passwordBuffer);
+		// }).then(function (passwordHashBuffer) {
 			return Promise.all([
 				self.stringToBuffer(text),
+				// self.generateKey(passwordHashBuffer, salt)
 				self.generateKey(passwordBuffer, salt)
 			]);
-		}).then(function (data) {
-			const textBuffer = data[0];
-			const key = data[1];
+		}).then(function (items) {
 			return window.crypto.subtle.encrypt({
 				length: self.ALGORITHM_LENGTH,
 				name: self.ALGORITHM_NAME,
 				iv: vector
-			}, key, textBuffer);
-		}).then(function (encrypted) {
+			}, items[1], items[0]);
+		}).then(function (data) {
 			return Promise.all([
-				self.bufferToHex(encrypted),
+				self.bufferToHex(data),
 				self.bufferToHex(vector),
 				self.bufferToHex(salt),
 			]).then(function (results) {
@@ -151,6 +189,8 @@ export default {
 		const vectorHex = texts[1];
 		const saltHex = texts[2];
 		let passwordBuffer, dataBuffer, vectorBuffer, saltBuffer;
+
+		// password = new TextEncoder().encode(password);
 
 		return Promise.all([
 			self.hexToBuffer(dataHex),
@@ -179,42 +219,3 @@ export default {
 	}
 
 }
-
-/*
-bufferToString: function (buffer) {
-	return Promise.resolve().then(function () {
-		let char2, char3, c;
-		let bytes = new Uint8Array(buffer);
-
-		let i = 0;
-		let out = '';
-		let length = bytes.length;
-
-		while (i < length) {
-
-			c = bytes[i++];
-
-			switch (c >> 4) {
-				case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-					// 0xxxxxxx
-					out += String.fromCharCode(c);
-				break;
-				case 12: case 13:
-					// 110x xxxx 10xx xxxx
-					char2 = bytes[i++];
-					out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
-				break;
-				case 14:
-					// 1110 xxxx 10xx xxxx 10xx xxxx
-					char2 = bytes[i++];
-					char3 = bytes[i++];
-					out += String.fromCharCode(((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0));
-				break;
-			}
-
-		}
-
-		return out;
-	});
-},
-*/

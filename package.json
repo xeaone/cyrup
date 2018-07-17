@@ -4,7 +4,7 @@
 	"description": "Browser crypto library",
 	"main": "dis/cyrup.node.js",
 	"scripts": {
-		"t": "cp dis/cyrup.min.js test/. && muleify serve test",
+		"t": "cp src/cyrup.js test/. && muleify -s test",
 		"b": "node build.js"
 	},
 	"repository": {
