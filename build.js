@@ -28,7 +28,7 @@ const header = `/*
 */
 `;
 
-const prepend = async function (data, path) {
+const prepend = async function (path, data) {
 	const fileData = await ReadFile(path, 'utf8');
 	await WriteFile(path, data + fileData, 'utf8');
 };
@@ -40,13 +40,17 @@ const prepend = async function (data, path) {
 		transpile: true,
 	};
 
-	await Muleify.pack(`src/${name}.js`, `dis/${name}.js`, options);
-	await prepend(header, `dis/${name}.js`);
+	const node = await ReadFile('src/node.js');
+	await WriteFile(`dis/${name}.node.js`, node);
+	await prepend(`dis/${name}.node.js`, header);
+
+	await Muleify.pack(`src/browser.js`, `dis/${name}.js`, options);
+	await prepend(`dis/${name}.js`, header);
 
 	options.minify = true;
 
-	await Muleify.pack(`src/${name}.js`, `dis/${name}.min.js`, options);
-	await prepend(header, `dis/${name}.min.js`);
+	await Muleify.pack(`src/browser.js`, `dis/${name}.min.js`, options);
+	await prepend(`dis/${name}.min.js`, header);
 
 }()).catch(function (error) {
 	console.error(error);

@@ -1,6 +1,6 @@
 /*
 	Name: cyrup
-	Version: 0.0.4
+	Version: 0.0.6
 	License: MPL-2.0
 	Author: Alexander Elias
 	Email: alex.steven.elias@gmail.com
@@ -15,7 +15,24 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 })(this, function () {
 	'use strict';
 
-	var cyrup = {
+	var browser = {
+
+		ROUNDS: 99999,
+		ENCODING: 'hex',
+		ALGORITHM: 'AES-GCM',
+
+		SALT_BYTES: 16,
+		HASH_BYTES: 32,
+		VECTOR_BYTES: 12,
+		SECRET_BYTES: 48,
+
+		HASH_TYPE: 'SHA-512',
+
+		randomBytes: function randomBytes(bytes) {
+			return Promise.resolve().then(function () {
+				return window.crypto.getRandomValues(new Uint8Array(bytes));
+			});
+		},
 		hexToBuffer: function hexToBuffer(hex) {
 			return Promise.resolve().then(function () {
 
@@ -38,7 +55,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		},
 		bufferToHex: function bufferToHex(buffer) {
 			return Promise.resolve().then(function () {
-
 				var bytes = new Uint8Array(buffer);
 				var hexes = [];
 
@@ -65,105 +81,147 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 			});
 		},
 		bufferToString: function bufferToString(buffer) {
-			var data = '';
+			return Promise.resolve().then(function () {
+				var data = '';
+				var bytes = new Uint8Array(buffer);
 
-			for (var i = 0; i < buffer.byteLength; i++) {
-				data += String.fromCharCode(buffer[i]);
-			}
+				for (var i = 0, l = bytes.length; i < l; i++) {
+					data += String.fromCharCode(bytes[i]);
+				}
 
-			return data;
+				return data;
+			});
 		},
-
-
-		/*bufferToString: function (buffer) {
-  	return Promise.resolve().then(function () {
-  		let char2, char3, c;
-  		let bytes = new Uint8Array(buffer);
-  			let i = 0;
-  		let out = '';
-  		let length = bytes.length;
-  			while (i < length) {
-  				c = bytes[i++];
-  				switch (c >> 4) {
-  				case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-  					// 0xxxxxxx
-  					out += String.fromCharCode(c);
-  				break;
-  				case 12: case 13:
-  					// 110x xxxx 10xx xxxx
-  					char2 = bytes[i++];
-  					out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
-  				break;
-  				case 14:
-  					// 1110 xxxx 10xx xxxx 10xx xxxx
-  					char2 = bytes[i++];
-  					char3 = bytes[i++];
-  					out += String.fromCharCode(((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0));
-  				break;
-  			}
-  			}
-  			return out;
-  	});
-  },*/
-
-		hasher: function hasher(data, options) {
+		pbkdf2: function pbkdf2(password, salt, iterations, digest, algorithm) {
 			var self = this;
 
-			options = options || {};
-			options.type = options.type || 'SHA-256';
+			if (!salt) throw new Error('salt required');
+			if (!digest) throw new Error('digest required');
+			if (!password) throw new Error('password required');
+			if (!iterations) throw new Error('iterations required');
 
 			return Promise.resolve().then(function () {
-				return self.stringToBuffer(data);
-			}).then(function (dataBuffer) {
-				return window.crypto.subtle.digest(options.type, dataBuffer);
+				return window.crypto.subtle.importKey('raw', password, { name: 'PBKDF2' }, false, ['deriveBits', 'deriveKey']);
+			}).then(function (key) {
+				return window.crypto.subtle.deriveKey({
+					salt: salt,
+					name: 'PBKDF2',
+					hash: digest || self.HASH_TYPE,
+					iterations: iterations || self.ROUNDS
+				}, key, {
+					length: 256,
+					name: algorithm || self.ALGORITHM
+				}, false, ['encrypt', 'decrypt']);
+			});
+		},
+		secret: function secret(data) {
+			var self = this;
+
+			data = data || {};
+			data.bytes = data.bytes || self.SECRET_BYTES;
+			data.encoding = data.encoding || self.ENCODING;
+
+			return Promise.resolve().then(function () {
+				return self.randomBytes(data.bytes);
+			}).then(function (buffer) {
+				return self.bufferToHex(buffer);
+			});
+		},
+		hash: function hash(text, data) {
+			var self = this;
+
+			data = data || {};
+			data.hashType = data.hashType || self.HASH_TYPE;
+
+			return Promise.resolve().then(function () {
+				return self.stringToBuffer(text);
+			}).then(function (textBuffer) {
+				return window.crypto.subtle.digest(data.hashType, textBuffer);
 			}).then(function (hashBuffer) {
 				return self.bufferToHex(hashBuffer);
 			});
 		},
-		encrypt: function encrypt(password, text) {
+		encrypt: function encrypt(password, text, data) {
+
+			if (!text) throw new Error('text required');
+			if (!password) throw new Error('password required');
+
 			var self = this;
-			var vector = window.crypto.getRandomValues(new Uint8Array(12));
-			var options = { name: 'AES-GCM', iv: vector };
+
+			var salt = void 0,
+			    vector = void 0,
+			    passwordBuffer = void 0;
+
+			data = data || {};
+			data.rounds = data.rounds || self.ROUNDS;
+			data.encoding = data.encoding || self.ENCODING;
+			data.hashType = data.hashType || self.HASH_TYPE;
+			data.algorithm = data.algorithm || self.ALGORITHM;
+			data.hashBytes = data.hashBytes || self.HASH_BYTES;
+			data.saltBytes = data.saltBytes || self.SALT_BYTES;
+			data.vectorBytes = data.vectorBytes || self.VECTOR_BYTES;
 
 			return Promise.resolve().then(function () {
-				return self.stringToBuffer(password);
-			}).then(function (bufferPassword) {
-				return window.crypto.subtle.digest('SHA-256', bufferPassword);
-			}).then(function (hash) {
-				return Promise.all([self.stringToBuffer(text), window.crypto.subtle.importKey('raw', hash, options, false, ['encrypt'])]);
+				return Promise.all([self.stringToBuffer(password), self.randomBytes(self.SALT_BYTES), self.randomBytes(self.VECTOR_BYTES)]);
 			}).then(function (items) {
-				return window.crypto.subtle.encrypt(options, items[1], items[0]);
-			}).then(function (buffer) {
-				return Promise.all([self.bufferToHex(vector), self.bufferToHex(buffer)]).then(function (results) {
+				salt = items[1];
+				vector = items[2];
+				passwordBuffer = items[0];
+			}).then(function () {
+				return Promise.all([self.stringToBuffer(text), self.pbkdf2(passwordBuffer, salt, data.rounds, data.hashType, data.algorithm)]);
+			}).then(function (items) {
+				var textBuffer = items[0];
+				var key = items[1];
+				return window.crypto.subtle.encrypt({
+					name: self.ALGORITHM,
+					iv: vector
+				}, key, textBuffer);
+			}).then(function (encrypted) {
+				return Promise.all([self.bufferToHex(encrypted), self.bufferToHex(vector), self.bufferToHex(salt)]).then(function (results) {
 					return results.join(':');
 				});
 			});
 		},
-		decrypt: function decrypt(password, text) {
+		decrypt: function decrypt(password, encrypted, data) {
+
+			if (!password) throw new Error('password required');
+			if (!encrypted) throw new Error('encrypted required');
+
 			var self = this;
-			var texts = text.split(':');
-			var options = { name: 'AES-GCM' };
+			var encrypteds = encrypted.split(':');
+			var textHex = encrypteds[0];
+			var vectorHex = encrypteds[1];
+			var saltHex = encrypteds[2];
 
-			var hexVector = texts[0];
-			var hexEncrypted = texts[1];
-			var bufferPassword = void 0,
-			    bufferEncrypted = void 0;
+			var passwordBuffer = void 0,
+			    textBuffer = void 0,
+			    vectorBuffer = void 0,
+			    saltBuffer = void 0;
 
-			return Promise.all([self.hexToBuffer(hexVector), self.stringToBuffer(password), self.hexToBuffer(hexEncrypted)]).then(function (data) {
-				options.iv = data[0];
-				bufferPassword = data[1];
-				bufferEncrypted = data[2];
+			data = data || {};
+			data.rounds = data.rounds || self.ROUNDS;
+			data.encoding = data.encoding || self.ENCODING;
+			data.hashType = data.hashType || self.HASH_TYPE;
+			data.algorithm = data.algorithm || self.ALGORITHM;
+			data.hashBytes = data.hashBytes || self.HASH_BYTES;
+
+			return Promise.all([self.hexToBuffer(textHex), self.hexToBuffer(vectorHex), self.hexToBuffer(saltHex), self.stringToBuffer(password)]).then(function (items) {
+				textBuffer = items[0];
+				vectorBuffer = items[1];
+				saltBuffer = items[2];
+				passwordBuffer = items[3];
 			}).then(function () {
-				return window.crypto.subtle.digest('SHA-256', bufferPassword);
-			}).then(function (hash) {
-				return window.crypto.subtle.importKey('raw', hash, options, false, ['decrypt']);
+				return self.pbkdf2(passwordBuffer, saltBuffer, data.rounds, data.hashType, data.algorithm);
 			}).then(function (key) {
-				return window.crypto.subtle.decrypt(options, key, bufferEncrypted);
+				return window.crypto.subtle.decrypt({
+					name: self.ALGORITHM,
+					iv: vectorBuffer
+				}, key, textBuffer);
 			}).then(function (decrypted) {
 				return self.bufferToString(decrypted);
 			});
 		}
 	};
 
-	return cyrup;
+	return browser;
 });
