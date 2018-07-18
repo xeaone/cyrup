@@ -57,9 +57,12 @@ module.exports = {
 	async encrypt (password, text, data) {
 		const self = this;
 
+		if (!text) throw new Error('text required');
+		if (!password) throw new Error('password required');
+
 		data = data || {};
 		data.rounds = data.rounds || self.ROUNDS;
-		data.encoding = data.encoding || self.ENCODING;
+		// data.encoding = data.encoding || self.ENCODING;
 		data.hashType = data.hashType || self.HASH_TYPE;
 		data.algorithm = data.algorithm || self.ALGORITHM;
 		data.hashBytes = data.hashBytes || self.HASH_BYTES;
@@ -71,7 +74,6 @@ module.exports = {
 		const key = await self.pbkdf2(password, salt, data.rounds, data.hashBytes, data.hashType);
 		const cipher = Crypto.createCipheriv(data.algorithm, key, vector);
 
-		// const data = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
 		const encrypted = cipher.update(text, 'utf8', data.encoding) + cipher.final(data.encoding);
 		const tag = cipher.getAuthTag();
 
@@ -83,25 +85,25 @@ module.exports = {
 
 		data = data || {};
 		data.rounds = data.rounds || self.ROUNDS;
-		data.encoding = data.encoding || self.ENCODING;
+		// data.encoding = data.encoding || self.ENCODING;
 		data.hashType = data.hashType || self.HASH_TYPE;
 		data.algorithm = data.algorithm || self.ALGORITHM;
 		data.hashBytes = data.hashBytes || self.HASH_BYTES;
 
 		const encrypteds = encrypted.split(':');
 		const text = encrypteds[0];
-		const vector = Buffer.from(encrypteds[1], data.encoding);
-		const salt = Buffer.from(encrypteds[2], data.encoding);
-		const tag = Buffer.from(encrypteds[3], data.encoding);
+		const vector = await self.bufferToHex(encrypteds[1]);
+		const salt = await self.bufferToHex(encrypteds[2]);
+		const tag = await self.bufferToHex(encrypteds[3]);
 
 		const key = await self.pbkdf2(password, salt, data.rounds, data.hashBytes, data.hashType);
 		const decipher = Crypto.createDecipheriv(data.algorithm, key, vector);
 
 		decipher.setAuthTag(tag);
 
-		const result = decipher.update(text, data.encoding, 'utf8') + decipher.final('utf8');
+		const decrypted = decipher.update(text, data.encoding, 'utf8') + decipher.final('utf8');
 
-		return result;
+		return decrypted;
 	}
 
 };

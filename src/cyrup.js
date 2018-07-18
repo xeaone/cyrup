@@ -4,6 +4,8 @@ const Cyrup = {
 	ROUNDS: 99999,
 	ENCODING: 'hex',
 
+	KEY_LENGTH: 64, // 512/8
+
 	SALT_BYTES: 16,
 	HASH_BYTES: 32,
 	VECTOR_BYTES: 12,
@@ -36,6 +38,91 @@ const Cyrup = {
 			return self.bufferToHex(buffer);
 		});
 	},
+
+	encrypt (password, text, data) {
+		const self = this;
+
+		if (!text) throw new Error('text required');
+		if (!password) throw new Error('password required');
+
+		data = data || {};
+		data.rounds = data.rounds || self.ROUNDS;
+		// data.encoding = data.encoding || self.ENCODING;
+		data.hashType = data.hashType || self.HASH_TYPE;
+		data.algorithm = data.algorithm || self.ALGORITHM;
+		data.hashBytes = data.hashBytes || self.HASH_BYTES;
+		data.saltBytes = data.saltBytes || self.SALT_BYTES;
+		data.vectorBytes = data.vectorBytes || self.VECTOR_BYTES;
+
+		let bSalt, bVector, bText, bPassword;
+
+		return Promise.all([
+			self.stringToBuffer(text),
+			self.stringToBuffer(password),
+			self.randomBytes(data.saltBytes),
+			self.randomBytes(data.vectorBytes)
+		]).then(function (items) {
+			bText = items[0];
+			bSalt = items[2];
+			bVector = items[3];
+			bPassword = items[1];
+		}).then(function () {
+			return self.pbkdf2(bPassword, bSalt, data.rounds, data.hashType, data.algorithm)
+		}).then(function (key) {
+			return self._encrypt(data.algorithm, key, bVector, bText);
+		}).then(function (bEncrypted) {
+			return Promise.all([
+				self.bufferToHex(bEncrypted),
+				self.bufferToHex(bVector),
+				self.bufferToHex(bSalt),
+			]).then(function (results) {
+				return results.join(':');
+			});
+		});
+	},
+
+	decrypt (password, encrypted, data) {
+		const self = this;
+
+		if (!password) throw new Error('password required');
+		if (!encrypted) throw new Error('encrypted required');
+
+	 	const self = this;
+		const encrypteds = encrypted.split(':');
+		const textHex = encrypteds[0];
+		const vectorHex = encrypteds[1];
+		const saltHex = encrypteds[2];
+
+		let passwordBuffer, textBuffer, vectorBuffer, saltBuffer;
+
+		data = data || {};
+		data.rounds = data.rounds || self.ROUNDS;
+		// data.encoding = data.encoding || self.ENCODING;
+
+		data.length = data.length || 256;
+
+		data.hashType = data.hashType || self.HASH_TYPE;
+		data.algorithm = data.algorithm || self.ALGORITHM;
+		data.hashBytes = data.hashBytes || self.HASH_BYTES;
+
+		return Promise.all([
+			self.hexToBuffer(textHex),
+			self.hexToBuffer(saltHex),
+			self.hexToBuffer(vectorHex),
+			self.stringToBuffer(password)
+		]).then(function (items) {
+			textBuffer = items[0];
+			saltBuffer = items[1];
+			vectorBuffer = items[2];
+			passwordBuffer = items[3];
+		}).then(function () {
+			return self.pbkdf2(passwordBuffer, saltBuffer, data.rounds, data.length, data.hashType, data.algorithm);
+		}).then(function (key) {
+			return self._decrypt(data.algorithm, key, vectorBuffer, textBuffer);
+		}).then(function (decrypted) {
+			return self.bufferToString(decrypted);
+		});
+	}
 
 };
 
@@ -71,12 +158,32 @@ if (typeof window === 'undefined') {
 
 	Cyrup.pbkdf2 = Util.promisify(Crypto.pbkdf2);
 
+	Cyrup._encrypt = async function (algorithm, key, vector, text) {
+		const self = this;
+		const cipher = Crypto.createCipheriv(algorithm, key, vector);
+		const encrypted = cipher.update(text, 'utf8', 'hex') + cipher.final('hex');
+
+		const tag = cipher.getAuthTag();
+		console.log(self.bufferToString(tag));
+
+		return encrypted;
+	};
+
+	Cyrup._decrypt = async function (algorithm, key, vector, text) {
+		const self = this;
+		const decipher = Crypto.createDecipheriv(algorithm, key, vector);
+
+		decipher.setAuthTag(tag);
+
+		const decrypted = decipher.update(text, 'hex', 'utf8') + decipher.final('utf8');
+	};
+
 } else {
 
 	Cyrup.HASH_TYPE = 'SHA-512';
 	Cyrup.ALGORITHM = 'AES-GCM';
 
-	Ppolly.hexToBuffer (hex) {
+	Cyrup.hexToBuffer = function (hex) {
 		return Promise.resolve().then(function () {
 
 			if (typeof hex !== 'string') {
@@ -97,7 +204,7 @@ if (typeof window === 'undefined') {
 		});
 	};
 
-	Cyrup.bufferToHex (buffer) {
+	Cyrup.bufferToHex = function (buffer) {
 		return Promise.resolve().then(function () {
 			let bytes = new Uint8Array(buffer);
 			let hexes = [];
@@ -114,7 +221,7 @@ if (typeof window === 'undefined') {
 		});
 	};
 
-	Cyrup.stringToBuffer (string) {
+	Cyrup.stringToBuffer = function (string) {
 		return Promise.resolve().then(function () {
 			let bytes = new Uint8Array(string.length);
 
@@ -126,7 +233,7 @@ if (typeof window === 'undefined') {
 		});
 	};
 
-    Cyrup.bufferToString (buffer) {
+    Cyrup.bufferToString = function (buffer) {
 		return Promise.resolve().then(function () {
 	        let data = '';
 			let bytes = new Uint8Array(buffer);
@@ -171,6 +278,18 @@ if (typeof window === 'undefined') {
 				length: length || 256,
 				name: algorithm || 'AES-GCM'
 			}, false, ['encrypt', 'decrypt']);
+		});
+	};
+
+	Cyrup._encrypt = function (algorithm, key, vector, text) {
+		return Promise.resolve().then(function () {
+			return window.crypto.subtle.encrypt({ name: algorithm, iv: vector }, key, text);
+		});
+	};
+
+	Cyrup._decrypt = function (algorithm, key, vector, text) {
+		return Promise.resolve().then(function () {
+			return window.crypto.subtle.decrypt({ name: algorithm, iv: vector }, key, text);
 		});
 	};
 

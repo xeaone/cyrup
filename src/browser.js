@@ -2,50 +2,44 @@
 export default {
 
 	encrypt (password, text, data) {
+		const self = this;
 
 		if (!text) throw new Error('text required');
 		if (!password) throw new Error('password required');
 
-		const self = this;
-
-		let salt, vector, passwordBuffer;
-
 		data = data || {};
 		data.rounds = data.rounds || self.ROUNDS;
-		data.encoding = data.encoding || self.ENCODING;
+		// data.encoding = data.encoding || self.ENCODING;
 		data.hashType = data.hashType || self.HASH_TYPE;
 		data.algorithm = data.algorithm || self.ALGORITHM;
 		data.hashBytes = data.hashBytes || self.HASH_BYTES;
 		data.saltBytes = data.saltBytes || self.SALT_BYTES;
 		data.vectorBytes = data.vectorBytes || self.VECTOR_BYTES;
 
-		return Promise.resolve().then(function () {
-			return Promise.all([
-				self.stringToBuffer(password),
-				self.randomBytes(self.SALT_BYTES),
-				self.randomBytes(self.VECTOR_BYTES)
-			]);
-		}).then(function (items) {
-			salt = items[1];
-			vector = items[2];
-			passwordBuffer = items[0];
+		let bSalt, bVector, bText, bPassword;
+
+		return Promise.all([
+			self.stringToBuffer(text),
+			self.stringToBuffer(password),
+			self.randomBytes(data.saltBytes),
+			self.randomBytes(data.vectorBytes)
+		]).then(function (items) {
+			bText = items[0];
+			bSalt = items[2];
+			bVector = items[3];
+			bPassword = items[1];
 		}).then(function () {
-			return Promise.all([
-				self.stringToBuffer(text),
-				self.pbkdf2(passwordBuffer, salt, data.rounds, data.hashType, data.algorithm)
-			]);
-		}).then(function (items) {
-			const textBuffer = items[0];
-			const key = items[1];
+			return self.pbkdf2(bPassword, bSalt, data.rounds, data.hashType, data.algorithm)
+		}).then(function (key) {
 			return window.crypto.subtle.encrypt({
-				name: self.ALGORITHM,
-				iv: vector
-			}, key, textBuffer);
-		}).then(function (encrypted) {
+				name: data.algorithm,
+				iv: bVector
+			}, key, bText);
+		}).then(function (bEncrypted) {
 			return Promise.all([
-				self.bufferToHex(encrypted),
-				self.bufferToHex(vector),
-				self.bufferToHex(salt),
+				self.bufferToHex(bEncrypted),
+				self.bufferToHex(bVector),
+				self.bufferToHex(bSalt),
 			]).then(function (results) {
 				return results.join(':');
 			});
@@ -67,7 +61,7 @@ export default {
 
 		data = data || {};
 		data.rounds = data.rounds || self.ROUNDS;
-		data.encoding = data.encoding || self.ENCODING;
+		// data.encoding = data.encoding || self.ENCODING;
 		data.hashType = data.hashType || self.HASH_TYPE;
 		data.algorithm = data.algorithm || self.ALGORITHM;
 		data.hashBytes = data.hashBytes || self.HASH_BYTES;

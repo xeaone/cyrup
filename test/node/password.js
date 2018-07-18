@@ -1,4 +1,4 @@
-const Cyrup = require('../../src/node.js');
+const Cyrup = require('./cyrup.js');
 
 (async function() {
 	const password = 'secret';
