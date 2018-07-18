@@ -65,10 +65,8 @@ if (typeof window === 'undefined') {
 
 	Cyrup.randomBytes = Util.promisify(Crypto.randomBytes);
 
-	Cyrup.createHash = function (buffer, type) {
-		return Promise.resolve().then(function () {
-			return Crypto.createHash(type).update(buffer).digest();
-		});
+	Cyrup.createHash = async function (buffer, type) {
+		return Crypto.createHash(type).update(buffer).digest();
 	};
 
 	Cyrup.pbkdf2 = Util.promisify(Crypto.pbkdf2);
@@ -155,14 +153,13 @@ if (typeof window === 'undefined') {
 
 	Cyrup.pbkdf2 = function (password, salt, iterations, length, digest, algorithm) {
 		const self = this;
-
-		if (!salt) throw new Error('salt required');
-		if (!length) throw new Error('length required');
-		if (!digest) throw new Error('digest required');
-		if (!password) throw new Error('password required');
-		if (!iterations) throw new Error('iterations required');
-
 		return Promise.resolve().then(function () {
+			if (!salt) throw new Error('salt required');
+			if (!length) throw new Error('length required');
+			if (!digest) throw new Error('digest required');
+			if (!password) throw new Error('password required');
+			if (!iterations) throw new Error('iterations required');
+		}).then(function () {
 			return window.crypto.subtle.importKey('raw', password, { name: 'PBKDF2' }, false, ['deriveBits', 'deriveKey']);
 		}).then(function (key) {
 			return window.crypto.subtle.deriveKey({
