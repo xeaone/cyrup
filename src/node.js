@@ -7,20 +7,6 @@ const RandomBytes = Util.promisify(Crypto.randomBytes);
 
 module.exports = {
 
-	ROUNDS: 99999,
-	ENCODING: 'hex',
-	ALGORITHM: 'aes-256-gcm',
-
-	SALT_BYTES: 16,
-	HASH_BYTES: 32,
-	VECTOR_BYTES: 12,
-	SECRET_BYTES: 48,
-
-	HASH_TYPE: 'sha512',
-
-	pbkdf2: Pbkdf2,
-	randomBytes: RandomBytes,
-
 	async hashPassword (password, data) {
 		const self = this;
 
@@ -66,28 +52,6 @@ module.exports = {
 		const verify = await self.pbkdf2(password, salt, rounds, hashBytes, data.hashType);
 
 		return verify.toString('binary') === hash;
-	},
-
-	async secret (data) {
-		const self = this;
-
-		data = data || {};
-		data.bytes = data.bytes || self.SECRET_BYTES;
-		data.encoding = data.encoding || self.ENCODING;
-
-		const bytes = await self.randomBytes(data.bytes);
-
-		return bytes.toString(data.encoding);
-	},
-
-	async hash (text, data) {
-		const self = this;
-
-		data = data || {};
-		data.encoding = data.encoding || self.ENCODING;
-		data.hashType = data.hashType || self.HASH_TYPE;
-
-		return Crypto.createHash(data.hashType).update(text).digest(data.encoding);
 	},
 
 	async encrypt (password, text, data) {
