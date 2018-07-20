@@ -200,6 +200,8 @@ if (typeof window === 'undefined') {
 	Cyrup._encrypt = async function (algorithm, key, vector, text) {
 		const self = this;
 		const cipher = Crypto.createCipheriv(algorithm, key, vector);
+
+		// TODO uncomment
 		// const encrypted = cipher.update(text, 'utf8', 'hex') + cipher.final('hex');
 
 		let update = cipher.update(text);
