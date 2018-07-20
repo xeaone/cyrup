@@ -7,8 +7,8 @@ document.querySelector('.crypt').addEventListener('click', async function () {
 	const encrypted = await Cyrup.encrypt(password, text);
 	console.log(`encrypted: ${encrypted}`);
 
-	const decrypted = await Cyrup.decrypt(password, encrypted);
-	console.log(`decrypted: ${decrypted}`);
+	// const decrypted = await Cyrup.decrypt(password, encrypted);
+	// console.log(`decrypted: ${decrypted}`);
 });
 
 document.querySelector('.hash').addEventListener('click', async function () {
