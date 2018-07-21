@@ -1,14 +1,10 @@
 # Cyrup
 
 ## Overview
-Browser and Node.js Crypto Library.
+Crypto Library For Node & Browsers
 
 ## Install
 `npm i cyrup --save`
-
-## Example
-```js
-```
 
 ## Authors
 [AlexanderElias](https://github.com/AlexanderElias)

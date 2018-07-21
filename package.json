@@ -1,12 +1,13 @@
 {
 	"name": "cyrup",
-	"version": "0.0.6",
-	"description": "Browser crypto library",
+	"version": "0.1.0",
+	"description": "Crypto Library For Node & Browsers",
 	"main": "dis/cyrup.js",
 	"scripts": {
+		"t": "node test",
 		"b": "node build.js",
-		"tn": "muleify -pb src/cyrup.js test/node/cyrup.js && node test/node/crypt.js",
-		"tb": "cp src/cyrup.js test/browser/. && muleify -s test/browser"
+		"s": "muleify -sw test",
+		"w": "muleify -pwb src/cyrup.js test/cyrup.js"
 	},
 	"repository": {
 		"type": "git",
