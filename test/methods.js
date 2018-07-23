@@ -8,13 +8,14 @@ if (typeof module === 'undefined') {
 module.exports = {
 
 	async crypt () {
-		const password = 'secret';
 		const text = 'hello wrold';
 
-		const encrypted = await Cyrup.encrypt({ password, item: text });
+		const key = await Cyrup.key({ item: 'secret' });
+
+		const encrypted = await Cyrup.encrypt({ item: text, key: key });
 		console.log(`encrypted: ${encrypted}`);
 
-		const decrypted = await Cyrup.decrypt({ password, item: encrypted });
+		const decrypted = await Cyrup.decrypt({ item: encrypted, key: key });
 		console.log(`decrypted: ${decrypted}`);
 
 	},

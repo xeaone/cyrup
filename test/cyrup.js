@@ -122,13 +122,12 @@
 			});
 		},
 
-		encrypt (data) {
+		key (data) {
 			const self = this;
 
 			data = data || {};
 
 			if (!data.item) throw new Error('item required');
-			if (!data.password) throw new Error('password required');
 
 			data.hash = data.hash || self.HASH;
 			data.algorithm = data.algorithm || self.ALGORITHM;
@@ -142,27 +141,45 @@
 			data.bytes = self.normalizeBytes(data.bytes);
 			data.algorithm = self.normalizeAlgorithm(data.algorithm);
 
-			let bSalt, bText, bVector, bPassword;
+			let salt, item;
 
 			return Promise.all([
 				self.stringToBuffer(data.item),
-				self.randomBytes(data.saltBytes),
-				self.randomBytes(data.vectorBytes),
-				self.stringToBuffer(data.password)
+				self.randomBytes(data.saltBytes)
 			]).then(function (results) {
-				bText = results[0];
-				bSalt = results[1];
-				bVector = results[2];
-				bPassword = results[3];
-			}).then(function () {
-				return self.pbkdf2(bPassword, bSalt, data.iterations, data.bytes, data.hash, data.algorithm);
+				item = results[0];
+				salt = results[1];
+				return self.pbkdf2(item, salt, data.iterations, data.bytes, data.hash, data.algorithm);
 			}).then(function (key) {
-				return self.cipher(data.algorithm, key, bVector, bText);
-			}).then(function (bEncrypted) {
+				return {
+					item: key,
+					algorithm: data.algorithm,
+					vectorBytes: data.vectorBytes
+				};
+			});
+		},
+
+		encrypt (data) {
+			const self = this;
+
+			data = data || {};
+
+			if (!data.key) throw new Error('key required');
+			if (!data.item) throw new Error('item required');
+
+			let vector, item;
+
+			return Promise.all([
+				self.stringToBuffer(data.item),
+				self.randomBytes(data.key.vectorBytes)
+			]).then(function (results) {
+				item = results[0];
+				vector = results[1];
+				return self.cipher(data.key.algorithm, data.key.item, vector, item);
+			}).then(function (encrypted) {
 				return Promise.all([
-					self.bufferToHex(bEncrypted),
-					self.bufferToHex(bVector),
-					self.bufferToHex(bSalt),
+					self.bufferToHex(encrypted),
+					self.bufferToHex(vector)
 				]).then(function (results) {
 					return results.join(':');
 				});
@@ -174,44 +191,22 @@
 
 			data = data || {};
 
+			if (!data.key) throw new Error('key required');
 			if (!data.item) throw new Error('item required');
-			if (!data.password) throw new Error('password required');
-
-			data.hash = data.hash || self.HASH;
-			data.algorithm = data.algorithm || self.ALGORITHM;
-			data.bytes = data.bytes || data.algorithm;
-
-			data.iterations = data.iterations || self.ITERATIONS;
-			data.saltBytes = data.saltBytes || self.SALT_BYTES;
-			data.vectorBytes = data.vectorBytes || self.VECTOR_BYTES;
-
-			data.hash = self.normalizeHash(data.hash);
-			data.bytes = self.normalizeBytes(data.bytes);
-			data.algorithm = self.normalizeAlgorithm(data.algorithm);
 
 			const items = data.item.split(':');
-			const textHex = items[0];
-			const vectorHex = items[1];
-			const saltHex = items[2];
 
-			let bSalt, bText, bVector, bPassword;
+			let item, vector;
 
 			return Promise.all([
-				self.hexToBuffer(textHex),
-				self.hexToBuffer(saltHex),
-				self.hexToBuffer(vectorHex),
-				self.stringToBuffer(data.password)
+				self.hexToBuffer(items[0]),
+				self.hexToBuffer(items[1])
 			]).then(function (results) {
-				bText = results[0];
-				bSalt = results[1];
-				bVector = results[2];
-				bPassword = results[3];
-			}).then(function () {
-				return self.pbkdf2(bPassword, bSalt, data.iterations, data.bytes, data.hash, data.algorithm);
-			}).then(function (key) {
-				return self.decipher(data.algorithm, key, bVector, bText);
-			}).then(function (bDecrypted) {
-				return self.bufferToString(bDecrypted);
+				item = results[0];
+				vector = results[1];
+				return self.decipher(data.key.algorithm, data.key.item, vector, item);
+			}).then(function (decrypted) {
+				return self.bufferToString(decrypted);
 			});
 		}
 
