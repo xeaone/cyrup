@@ -2,32 +2,16 @@
 const Cyrup = {
 
 	ENCODING: 'hex',
-	ITERATIONS: 99999,
-	// ITERATIONS: 999999,
+	ITERATIONS: 999999,
 
-	TAG_BYTES: 16,
-	KEY_BYTES: 32,
-	SALT_BYTES: 16,
-	VECTOR_BYTES: 12,
-	SECRET_BYTES: 48,
 
+	KEY: 32,
+	TAG: 16,
 	SALT: 16,
 	VECTOR: 12,
-	LENGTH: 32,
+	SECRET: 48,
 	HASH: 'sha-512',
 	ALGORITHM: 'aes-256-gcm',
-
-	// normalizeBytes (algorithm) {
-	// 	const self = this;
-	//
-	// 	if (typeof algorithm === 'number') return algorithm;
-	// 	if (algorithm.toLowerCase().indexOf('aes') !== 0) return self.KEY_BYTES;
-	//
-	// 	const algorithms = algorithm.split('-');
-	// 	const bits = parseInt(algorithms[1]);
-	//
-	// 	return bits === NaN ? self.KEY_BYTES * 8 : bits / 8;
-	// },
 
 	// password hash
 	password (item) {
@@ -81,10 +65,10 @@ const Cyrup = {
 		const self = this;
 
 		data = data || {};
-		data.bytes = data.bytes || self.SECRET_BYTES;
+		data.size = data.size || self.SECRET;
 
 		return Promise.resolve().then(function () {
-			return self.randomBytes(data.bytes);
+			return self.randomBytes(data.size);
 		}).then(function (buffer) {
 			return self.bufferToHex(buffer);
 		});
@@ -115,8 +99,8 @@ const Cyrup = {
 
 		if (!data.item) throw new Error('item required');
 
+		data.size = data.size || self.KEY;
 		data.salt = data.salt || self.SALT;
-		data.size = data.size || self.LENGTH;
 		data.iterations = data.iterations || self.ITERATIONS;
 		data.hash = self.normalizeHash(data.hash || self.HASH);
 
@@ -256,8 +240,8 @@ if (typeof window === 'undefined') {
 	Cyrup.decipher = async function (algorithm, key, vector, data) {
 		const self = this;
 		const buffer = Buffer.from(data, 'hex');
-		const tag = buffer.slice(buffer.byteLength - self.TAG_BYTES);
-		const text = buffer.slice(0, buffer.byteLength - self.TAG_BYTES);
+		const tag = buffer.slice(buffer.byteLength - self.TAG);
+		const text = buffer.slice(0, buffer.byteLength - self.TAG);
 		const decipher = Crypto.createDecipheriv(algorithm, key, vector);
 
 		decipher.setAuthTag(tag);
@@ -278,7 +262,7 @@ if (typeof window === 'undefined') {
 	};
 
 	Cyrup.getAuthTag = function (encrypted) {
-		return encrypted.slice(encrypted.byteLength - this.TAG_BYTES);
+		return encrypted.slice(encrypted.byteLength - this.TAG);
 	};
 
 	Cyrup.hexToBuffer = function (hex) {
@@ -354,7 +338,7 @@ if (typeof window === 'undefined') {
 
 	Cyrup.pbkdf2 = function (password, salt, iterations, size, hash) {
 		return Promise.resolve().then(function () {
-			return window.crypto.subtle.importKey('raw', password, { name: 'PBKDF2' }, false, ['deriveKey', 'deriveBits']);
+			return window.crypto.subtle.importKey('raw', password, { name: 'PBKDF2' }, false, ['deriveBits']);
 		}).then(function (key) {
 			return window.crypto.subtle.deriveBits({
 				salt,
@@ -362,55 +346,28 @@ if (typeof window === 'undefined') {
 				name: 'PBKDF2',
 				hash: { name: hash }
 			}, key, size << 3);
+		}).then(function (bits) {
+			return new Uint8Array(bits);
 		});
 	};
-
-	// Cyrup.pbkdf2 = function (password, salt, iterations, bytes, hash, algorithm) {
-	// 	const self = this;
-	// 	return Promise.resolve().then(function () {
-	// 		if (!salt) throw new Error('salt required');
-	// 		if (!hash) throw new Error('hash required');
-	// 		if (!bytes) throw new Error('bytes required');
-	// 		if (!password) throw new Error('password required');
-	// 		if (!algorithm) throw new Error('algorithm required');
-	// 		if (!iterations) throw new Error('iterations required');
-	// 	}).then(function () {
-	// 		return window.crypto.subtle.importKey('raw', password, { name: 'PBKDF2' }, true, ['deriveBits', 'deriveKey']);
-	// 	}).then(function (key) {
-	// 		return window.crypto.subtle.deriveKey({
-	// 			salt,
-	// 			hash,
-	// 			iterations,
-	// 			name: 'PBKDF2'
-	// 		}, key, {
-	// 			name: algorithm,
-	// 			length: bytes * 8,
-	// 			tagLength: self.TAG_BYTES * 8
-	// 		}, true, ['encrypt', 'decrypt']);
-	// 	});
-	// };
 
 	Cyrup.cipher = function (algorithm, key, vector, item) {
 		const self = this;
 		return Promise.resolve().then(function () {
-			console.log('cipher 1');
-			return window.crypto.subtle.importKey('raw', key, { name: 'PBKDF2' }, false, ['deriveKey']);
+			return window.crypto.subtle.importKey('raw', key, { name: algorithm }, false, ['encrypt']);
 		}).then(function (data) {
-			console.log(data.algorithm);
-			console.log('cipher 2');
-			return window.crypto.subtle.encrypt({ name: algorithm, iv: vector }, data, item);
-		}).then(function (d) {
-
+			const tagLength = self.TAG * 8;
+			return window.crypto.subtle.encrypt({ name: algorithm, iv: vector, tagLength }, data, item);
 		});
 	};
 
 	Cyrup.decipher = function (algorithm, key, vector, item) {
+		const self = this;
 		return Promise.resolve().then(function () {
-			console.log('decipher 1');
-			return window.crypto.subtle.importKey('raw', key, { name: 'PBKDF2' }, false, ['deriveBits']);
+			return window.crypto.subtle.importKey('raw', key, { name: algorithm }, false, ['decrypt']);
 		}).then(function (data) {
-			console.log('decipher 2');
-			return window.crypto.subtle.decrypt({ name: algorithm, iv: vector }, data, item);
+			const tagLength = self.TAG * 8;
+			return window.crypto.subtle.decrypt({ name: algorithm, iv: vector, tagLength }, data, item);
 		});
 	};
 

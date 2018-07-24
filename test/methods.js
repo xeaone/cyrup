@@ -30,12 +30,12 @@ module.exports = {
 		const encrypted = await Cyrup.encrypt({ item: TEXT, key: key });
 		console.timeEnd('encrypt');
 
-		console.log(`encrypted: ${encrypted}`);
-
 		console.time('decrypt');
 		const decrypted = await Cyrup.decrypt({ item: encrypted, key: key });
 		console.timeEnd('decrypt');
 
+		console.log(`key: ${key}`);
+		console.log(`encrypted: ${encrypted}`);
 		console.log(`decrypted: ${decrypted}`);
 
 	},
