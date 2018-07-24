@@ -13,80 +13,68 @@ const Cyrup = {
 	HASH: 'sha-512',
 	ALGORITHM: 'aes-256-gcm',
 
-	// password hash
-	password (item) {
+	passwordHash (password) {
 		const self = this;
 
-		if (!item) throw new Error('password item required');
+		if (!password) throw new Error('password item required');
 
 		return Promise.resolve().then(function () {
-			return self.key({ item });
-		}).then(function (key) {
-			return Promise.all([
-				self.bufferToHex(key.item),
-				self.bufferToHex(key.salt)
-			]);
-		}).then(function (results) {
-			return results.join(':');
+			return self.key({ item: password });
 		});
 	},
 
-	// password valid
-	valid (sPassword, hPassword) {
+	passwordCompare (password, key) {
 		const self = this;
 
-		if (!hPassword) throw new Error('hex password required');
-		if (!sPassword) throw new Error('string password required');
+		if (!key) throw new Error('key required');
+		if (!password) throw new Error('password required');
 
-		const parts = hPassword.split(':');
+		const parts = key.split(':');
 
 		return Promise.resolve().then(function () {
-			return self.key({ item: sPassword, salt: parts[1] });
-		}).then(function (key) {
-			return self.bufferToHex(key.item);
-		}).then(function (result) {
-			return result === parts[0];
+			return self.hexToBuffer(parts[1])
+		}).then(function (salt) {
+			return self.key({ item: password, salt });
+		}).then(function (data) {
+			return data === key;
 		});
 	},
 
-	random (data) {
+	random (size) {
 		const self = this;
 
-		data = data || {};
+		if (!size) throw new Error('size required');
 
 		return Promise.resolve().then(function () {
-			return self.randomBytes(data.bytes);
+			return self.randomBytes(size);
 		}).then(function (buffer) {
 			return self.bufferToHex(buffer);
 		});
 	},
 
-	secret (data) {
+	secret (size) {
 		const self = this;
 
-		data = data || {};
-		data.size = data.size || self.SECRET;
+		size = size || self.SECRET;
 
 		return Promise.resolve().then(function () {
-			return self.randomBytes(data.size);
+			return self.randomBytes(size);
 		}).then(function (buffer) {
 			return self.bufferToHex(buffer);
 		});
 	},
 
-	hash (data) {
+	hash (item, type) {
 		const self = this;
 
-		if (!data.item) throw new Error('item required');
+		if (!item) throw new Error('item required');
 
-		data = data || {};
-		data.hash = data.hash || self.HASH;
-		data.hash = self.normalizeHash(data.hash);
+		type = self.normalizeHash(type || self.HASH);
 
 		return Promise.resolve().then(function () {
-			return self.stringToBuffer(data.item);
+			return self.stringToBuffer(item);
 		}).then(function (buffer) {
-			return self.createHash(buffer, data.hash);
+			return self.createHash(buffer, type);
 		}).then(function (buffer) {
 			return self.bufferToHex(buffer);
 		});
@@ -108,7 +96,11 @@ const Cyrup = {
 
 		return Promise.all([
 			typeof data.item === 'string' ? self.stringToBuffer(data.item) : data.item,
-			typeof data.salt === 'string' ? self.stringToBuffer(data.salt) : self.randomBytes(data.salt)
+			typeof data.salt === 'string' ?
+				self.stringToBuffer(data.salt) :
+				typeof data.salt === 'number' ?
+					self.randomBytes(data.salt) :
+					data.salt
 		]).then(function (results) {
 			item = results[0];
 			salt = results[1];

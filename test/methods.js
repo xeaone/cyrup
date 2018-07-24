@@ -12,12 +12,16 @@ module.exports = {
 
 	async password () {
 
-		const hPassword = await Cyrup.password(PASSWORD);
-		console.log(`password: ${hPassword}`);
+		console.time('passwordHash');
+		const password = await Cyrup.passwordHash(PASSWORD);
+		console.timeEnd('passwordHash');
 
-		const valid = await Cyrup.valid(PASSWORD, hPassword);
-		console.log(`valid: ${valid}`);
+		console.time('passwordCompare');
+		const valid = await Cyrup.passwordCompare(PASSWORD, password);
+		console.timeEnd('passwordCompare');
 
+		console.log(`passwordHash: ${password}`);
+		console.log(`passwordCompare: ${valid}`);
 	},
 
 	async crypt () {
@@ -41,13 +45,18 @@ module.exports = {
 	},
 
 	async hash () {
-		const hash = await Cyrup.hash({ item: 'hash is good' });
+		const item = 'hash is good for you?';
+		const hash = await Cyrup.hash(item);
 		console.log(`hash: ${hash}`);
 	},
 
 	async secret () {
 		const secret = await Cyrup.secret();
 		console.log(`secret: ${secret}`);
-	}
+	},
 
+	async random () {
+		const random = await Cyrup.random(32);
+		console.log(`random: ${random}`);
+	}
 };
