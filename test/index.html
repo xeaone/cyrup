@@ -23,8 +23,14 @@
 			let button = document.createElement('button');
 			button.class = name;
 			button.innerHTML = name;
-			button.onclick = methods[name];
 			document.body.appendChild(button);
+			button.onclick = function (methdo) {
+				try {
+					methods[name]();
+				} catch (error) {
+					console.error(error);
+				}
+			};
 		}
 	</script>
 

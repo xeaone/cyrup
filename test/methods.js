@@ -5,17 +5,37 @@ if (typeof module === 'undefined') {
 	Cyrup = require('./cyrup.js');
 }
 
+const TEXT = 'hello world';
+const PASSWORD = 'secret';
+
 module.exports = {
 
+	async password () {
+
+		const hPassword = await Cyrup.password(PASSWORD);
+		console.log(`password: ${hPassword}`);
+
+		const valid = await Cyrup.valid(PASSWORD, hPassword);
+		console.log(`valid: ${valid}`);
+
+	},
+
 	async crypt () {
-		const text = 'hello wrold';
 
-		const key = await Cyrup.key({ item: 'secret' });
+		console.time('key');
+		const key = await Cyrup.key({ item: PASSWORD });
+		console.timeEnd('key');
 
-		const encrypted = await Cyrup.encrypt({ item: text, key: key });
+		console.time('encrypt');
+		const encrypted = await Cyrup.encrypt({ item: TEXT, key: key });
+		console.timeEnd('encrypt');
+
 		console.log(`encrypted: ${encrypted}`);
 
+		console.time('decrypt');
 		const decrypted = await Cyrup.decrypt({ item: encrypted, key: key });
+		console.timeEnd('decrypt');
+
 		console.log(`decrypted: ${decrypted}`);
 
 	},
