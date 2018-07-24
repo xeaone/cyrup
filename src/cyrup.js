@@ -4,7 +4,6 @@ const Cyrup = {
 	ENCODING: 'hex',
 	ITERATIONS: 999999,
 
-
 	KEY: 32,
 	TAG: 16,
 	SALT: 16,
@@ -19,24 +18,22 @@ const Cyrup = {
 		if (!password) throw new Error('password item required');
 
 		return Promise.resolve().then(function () {
-			return self.key({ item: password });
+			return self.key(password);
 		});
 	},
 
-	passwordCompare (password, key) {
+	passwordCompare (passwordText, passwordHash) {
 		const self = this;
 
-		if (!key) throw new Error('key required');
-		if (!password) throw new Error('password required');
-
-		const parts = key.split(':');
+		if (!passwordText) throw new Error('password text required');
+		if (!passwordHash) throw new Error('password hash required');
 
 		return Promise.resolve().then(function () {
-			return self.hexToBuffer(parts[1])
+			return self.hexToBuffer(passwordHash.split(':')[1])
 		}).then(function (salt) {
-			return self.key({ item: password, salt });
+			return self.key(passwordText, { salt });
 		}).then(function (data) {
-			return data === key;
+			return data === passwordHash;
 		});
 	},
 
@@ -80,22 +77,21 @@ const Cyrup = {
 		});
 	},
 
-	key (data) {
+	key (item, data) {
 		const self = this;
 
+		if (!item) throw new Error('item required');
+
 		data = data || {};
-
-		if (!data.item) throw new Error('item required');
-
 		data.size = data.size || self.KEY;
 		data.salt = data.salt || self.SALT;
 		data.iterations = data.iterations || self.ITERATIONS;
 		data.hash = self.normalizeHash(data.hash || self.HASH);
 
-		let salt, item;
+		let salt;
 
 		return Promise.all([
-			typeof data.item === 'string' ? self.stringToBuffer(data.item) : data.item,
+			typeof item === 'string' ? self.stringToBuffer(item) : item,
 			typeof data.salt === 'string' ?
 				self.stringToBuffer(data.salt) :
 				typeof data.salt === 'number' ?
@@ -115,29 +111,26 @@ const Cyrup = {
 		});
 	},
 
-	encrypt (data) {
+	encrypt (item, key, algorithm, vector) {
 		const self = this;
 
-		data = data || {};
+		if (!key) throw new Error('key required');
+		if (!item) throw new Error('item required');
 
-		if (!data.key) throw new Error('key required');
-		if (!data.item) throw new Error('item required');
+		vector = vector || self.VECTOR;
+		algorithm = self.normalizeAlgorithm(algorithm || self.ALGORITHM);
 
-		data.vector = data.vector || self.VECTOR;
-		data.algorithm = self.normalizeAlgorithm(data.algorithm || self.ALGORITHM);
-
-		let vector, item;
-		let key = data.key.split(':')[0];
+		key = key.split(':')[0];
 
 		return Promise.all([
 			self.hexToBuffer(key),
-			typeof data.item === 'string' ? self.stringToBuffer(data.item) : data.item,
-			typeof data.vector === 'string' ? self.stringToBuffer(data.vector) : self.randomBytes(data.vector)
+			typeof item === 'string' ? self.stringToBuffer(item) : item,
+			typeof vector === 'string' ? self.stringToBuffer(vector) : self.randomBytes(vector)
 		]).then(function (results) {
 			key = results[0];
 			item = results[1];
 			vector = results[2];
-			return self.cipher(data.algorithm, key, vector, item);
+			return self.cipher(algorithm, key, vector, item);
 		}).then(function (encrypted) {
 			return Promise.all([
 				self.bufferToHex(encrypted),
@@ -148,20 +141,20 @@ const Cyrup = {
 		});
 	},
 
-	decrypt (data) {
+	decrypt (item, key, algorithm) {
 		const self = this;
 
-		data = data || {};
+		if (!key) throw new Error('key required');
+		if (!item) throw new Error('item required');
 
-		if (!data.key) throw new Error('key required');
-		if (!data.item) throw new Error('item required');
+		algorithm = self.normalizeAlgorithm(algorithm || self.ALGORITHM);
 
-		data.algorithm = self.normalizeAlgorithm(data.algorithm || self.ALGORITHM);
+		let vector;
+		const items = item.split(':');
 
-		const items = data.item.split(':');
-		let key = data.key.split(':')[0];
-		let item = items[0];
-		let vector = items[1];
+		key = key.split(':')[0];
+		item = items[0];
+		vector = items[1];
 
 		return Promise.all([
 			self.hexToBuffer(key),
@@ -171,7 +164,7 @@ const Cyrup = {
 			key = results[0];
 			item = results[1];
 			vector = results[2];
-			return self.decipher(data.algorithm, key, vector, item);
+			return self.decipher(algorithm, key, vector, item);
 		}).then(function (decrypted) {
 			return self.bufferToString(decrypted);
 		});

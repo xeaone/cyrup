@@ -27,15 +27,15 @@ module.exports = {
 	async crypt () {
 
 		console.time('key');
-		const key = await Cyrup.key({ item: PASSWORD });
+		const key = await Cyrup.key(PASSWORD);
 		console.timeEnd('key');
 
 		console.time('encrypt');
-		const encrypted = await Cyrup.encrypt({ item: TEXT, key: key });
+		const encrypted = await Cyrup.encrypt(TEXT, key);
 		console.timeEnd('encrypt');
 
 		console.time('decrypt');
-		const decrypted = await Cyrup.decrypt({ item: encrypted, key: key });
+		const decrypted = await Cyrup.decrypt(encrypted, key);
 		console.timeEnd('decrypt');
 
 		console.log(`key: ${key}`);
