@@ -1,8 +1,8 @@
 {
 	"name": "cyrup",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"description": "Crypto Library For Node & Browsers",
-	"main": "dis/cyrup.js",
+	"main": "dst/cyrup.js",
 	"scripts": {
 		"t": "node test",
 		"b": "node build.js",
@@ -22,6 +22,5 @@
 	"bugs": {
 		"url": "https://github.com/AlexanderElias/cyrup/issues"
 	},
-	"homepage": "https://github.com/AlexanderElias/cyrup#readme",
-	"devDependencies": {}
+	"homepage": "https://github.com/AlexanderElias/cyrup#readme"
 }

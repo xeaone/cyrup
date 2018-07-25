@@ -40,13 +40,13 @@ const prepend = async function (path, data) {
 		transpile: true,
 	};
 
-	await Muleify.pack(`src/${name}.js`, `dis/${name}.js`, options);
-	await prepend(`dis/${name}.js`, header);
+	await Muleify.pack(`src/${name}.js`, `dst/${name}.js`, options);
+	await prepend(`dst/${name}.js`, header);
 
 	options.minify = true;
 
-	await Muleify.pack(`src/${name}.js`, `dis/${name}.min.js`, options);
-	await prepend(`dis/${name}.min.js`, header);
+	await Muleify.pack(`src/${name}.js`, `dst/${name}.min.js`, options);
+	await prepend(`dst/${name}.min.js`, header);
 
 }()).catch(function (error) {
 	console.error(error);
