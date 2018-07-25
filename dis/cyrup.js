@@ -1,6 +1,6 @@
 /*
 	Name: cyrup
-	Version: 0.1.0
+	Version: 0.2.0
 	License: MPL-2.0
 	Author: Alexander Elias
 	Email: alex.steven.elias@gmail.com
@@ -8,197 +8,179 @@
 	License, v. 2.0. If a copy of the MPL was not distributed with this
 	file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+var _async = function () {
+	try {
+		if (isNaN.apply(null, {})) {
+			return function (f) {
+				return function () {
+					try {
+						return Promise.resolve(f.apply(this, arguments));
+					} catch (e) {
+						return Promise.reject(e);
+					}
+				};
+			};
+		}
+	} catch (e) {}return function (f) {
+		// Pre-ES5.1 JavaScript runtimes don't accept array-likes in Function.apply
+		return function () {
+			var args = [];for (var i = 0; i < arguments.length; i++) {
+				args[i] = arguments[i];
+			}try {
+				return Promise.resolve(f.apply(this, args));
+			} catch (e) {
+				return Promise.reject(e);
+			}
+		};
+	};
+}(),
+    _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 (function (global, factory) {
 	(typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define('Cyrup', factory) : global.Cyrup = factory();
 })(this, function () {
 	'use strict';
 
-	/*
- async hashPassword (password, data) {
- 	const self = this;
- 		data = data || {};
- 	data.rounds = data.rounds || self.ROUNDS;
- 	data.encoding = data.encoding || self.ENCODING;
- 	data.hashType = data.hashType || self.HASH_TYPE;
- 	data.hashBytes = data.hashBytes || self.HASH_BYTES;
- 	data.saltBytes = data.saltBytes || self.SALT_BYTES;
- 		const salt = await self.randomBytes(data.saltBytes);
- 	const hash = await self.pbkdf2(password, salt, data.rounds, data.hashBytes, data.hashType);
- 		const buffer = Buffer.alloc(hash.length + salt.length + 8);
- 		// include salt length to figure out how much of the hash is salt
- 	buffer.writeUInt32BE(salt.length, 0, true);
- 	buffer.writeUInt32BE(data.rounds, 4, true);
- 		salt.copy(buffer, 8);
- 	hash.copy(buffer, salt.length + 8);
- 		return buffer.toString(data.encoding);
- },
- 	async comparePassword (password, combined, data) {
- 	const self = this;
- 		data = data || {};
- 	data.encoding = data.encoding || self.ENCODING;
- 	data.hashType = data.hashType || self.HASH_TYPE;
- 		combined = Buffer.from(combined, data.encoding);
- 		// extract the salt from the buffer
- 	const saltBytes = combined.readUInt32BE(0);
- 	const hashBytes = combined.length - saltBytes - 8;
- 	const rounds = combined.readUInt32BE(4);
- 		const salt = combined.slice(8, saltBytes + 8);
- 	const hash = combined.toString('binary', saltBytes + 8);
- 		const verify = await self.pbkdf2(password, salt, rounds, hashBytes, data.hashType);
- 		return verify.toString('binary') === hash;
- },
- */
-
 	var Cyrup = {
 
 		ENCODING: 'hex',
-		ITERATIONS: 99999,
+		ITERATIONS: 999999,
 
-		TAG_BYTES: 16,
-		KEY_BYTES: 32,
-		SALT_BYTES: 16,
-		VECTOR_BYTES: 12,
-		SECRET_BYTES: 48,
-
+		KEY: 32,
+		TAG: 16,
+		SALT: 16,
+		VECTOR: 12,
+		SECRET: 48,
 		HASH: 'sha-512',
 		ALGORITHM: 'aes-256-gcm',
 
-		normalizeBytes: function normalizeBytes(algorithm) {
+		passwordHash: function passwordHash(password) {
 			var self = this;
 
-			if (typeof algorithm === 'number') return algorithm;
-			if (algorithm.toLowerCase().indexOf('aes') !== 0) return self.KEY_BYTES;
-
-			var algorithms = algorithm.split('-');
-			var bits = parseInt(algorithms[1]);
-
-			return bits === NaN ? self.KEY_BYTES * 8 : bits / 8;
-		},
-		random: function random(data) {
-			var self = this;
-
-			data = data || {};
+			if (!password) throw new Error('password item required');
 
 			return Promise.resolve().then(function () {
-				return self.randomBytes(data.bytes);
+				return self.key(password);
+			});
+		},
+		passwordCompare: function passwordCompare(passwordText, passwordHash) {
+			var self = this;
+
+			if (!passwordText) throw new Error('password text required');
+			if (!passwordHash) throw new Error('password hash required');
+
+			return Promise.resolve().then(function () {
+				return self.hexToBuffer(passwordHash.split(':')[1]);
+			}).then(function (salt) {
+				return self.key(passwordText, { salt: salt });
+			}).then(function (data) {
+				return data === passwordHash;
+			});
+		},
+		random: function random(size) {
+			var self = this;
+
+			if (!size) throw new Error('size required');
+
+			return Promise.resolve().then(function () {
+				return self.randomBytes(size);
 			}).then(function (buffer) {
 				return self.bufferToHex(buffer);
 			});
 		},
-		secret: function secret(data) {
+		secret: function secret(size) {
 			var self = this;
 
-			data = data || {};
-			data.bytes = data.bytes || self.SECRET_BYTES;
+			size = size || self.SECRET;
 
 			return Promise.resolve().then(function () {
-				return self.randomBytes(data.bytes);
+				return self.randomBytes(size);
 			}).then(function (buffer) {
 				return self.bufferToHex(buffer);
 			});
 		},
-		hash: function hash(data) {
+		hash: function hash(item, type) {
 			var self = this;
 
-			if (!data.item) throw new Error('item required');
+			if (!item) throw new Error('item required');
 
-			data = data || {};
-			data.hash = data.hash || self.HASH;
-			data.hash = self.normalizeHash(data.hash);
+			type = self.normalizeHash(type || self.HASH);
 
 			return Promise.resolve().then(function () {
-				return self.stringToBuffer(data.item);
+				return self.stringToBuffer(item);
 			}).then(function (buffer) {
-				return self.createHash(buffer, data.hash);
+				return self.createHash(buffer, type);
 			}).then(function (buffer) {
 				return self.bufferToHex(buffer);
 			});
 		},
-		encrypt: function encrypt(data) {
+		key: function key(item, data) {
 			var self = this;
 
+			if (!item) throw new Error('item required');
+
 			data = data || {};
-
-			if (!data.item) throw new Error('item required');
-			if (!data.password) throw new Error('password required');
-
-			data.hash = data.hash || self.HASH;
-			data.algorithm = data.algorithm || self.ALGORITHM;
-			data.bytes = data.bytes || data.algorithm;
-
+			data.size = data.size || self.KEY;
+			data.salt = data.salt || self.SALT;
 			data.iterations = data.iterations || self.ITERATIONS;
-			data.saltBytes = data.saltBytes || self.SALT_BYTES;
-			data.vectorBytes = data.vectorBytes || self.VECTOR_BYTES;
+			data.hash = self.normalizeHash(data.hash || self.HASH);
 
-			data.hash = self.normalizeHash(data.hash);
-			data.bytes = self.normalizeBytes(data.bytes);
-			data.algorithm = self.normalizeAlgorithm(data.algorithm);
+			var salt = void 0;
 
-			var bSalt = void 0,
-			    bText = void 0,
-			    bVector = void 0,
-			    bPassword = void 0;
-
-			return Promise.all([self.stringToBuffer(data.item), self.randomBytes(data.saltBytes), self.randomBytes(data.vectorBytes), self.stringToBuffer(data.password)]).then(function (results) {
-				bText = results[0];
-				bSalt = results[1];
-				bVector = results[2];
-				bPassword = results[3];
-			}).then(function () {
-				return self.pbkdf2(bPassword, bSalt, data.iterations, data.bytes, data.hash, data.algorithm);
+			return Promise.all([typeof item === 'string' ? self.stringToBuffer(item) : item, typeof data.salt === 'string' ? self.stringToBuffer(data.salt) : typeof data.salt === 'number' ? self.randomBytes(data.salt) : data.salt]).then(function (results) {
+				item = results[0];
+				salt = results[1];
+				return self.pbkdf2(item, salt, data.iterations, data.size, data.hash);
 			}).then(function (key) {
-				return self.cipher(data.algorithm, key, bVector, bText);
-			}).then(function (bEncrypted) {
-				return Promise.all([self.bufferToHex(bEncrypted), self.bufferToHex(bVector), self.bufferToHex(bSalt)]).then(function (results) {
+				return Promise.all([self.bufferToHex(key), self.bufferToHex(salt)]).then(function (results) {
 					return results.join(':');
 				});
 			});
 		},
-		decrypt: function decrypt(data) {
+		encrypt: function encrypt(item, key, algorithm, vector) {
 			var self = this;
 
-			data = data || {};
+			if (!key) throw new Error('key required');
+			if (!item) throw new Error('item required');
 
-			if (!data.item) throw new Error('item required');
-			if (!data.password) throw new Error('password required');
+			vector = vector || self.VECTOR;
+			algorithm = self.normalizeAlgorithm(algorithm || self.ALGORITHM);
 
-			data.hash = data.hash || self.HASH;
-			data.algorithm = data.algorithm || self.ALGORITHM;
-			data.bytes = data.bytes || data.algorithm;
+			key = key.split(':')[0];
 
-			data.iterations = data.iterations || self.ITERATIONS;
-			data.saltBytes = data.saltBytes || self.SALT_BYTES;
-			data.vectorBytes = data.vectorBytes || self.VECTOR_BYTES;
+			return Promise.all([self.hexToBuffer(key), typeof item === 'string' ? self.stringToBuffer(item) : item, typeof vector === 'string' ? self.stringToBuffer(vector) : self.randomBytes(vector)]).then(function (results) {
+				key = results[0];
+				item = results[1];
+				vector = results[2];
+				return self.cipher(algorithm, key, vector, item);
+			}).then(function (encrypted) {
+				return Promise.all([self.bufferToHex(encrypted), self.bufferToHex(vector)]).then(function (results) {
+					return results.join(':');
+				});
+			});
+		},
+		decrypt: function decrypt(item, key, algorithm) {
+			var self = this;
 
-			data.hash = self.normalizeHash(data.hash);
-			data.bytes = self.normalizeBytes(data.bytes);
-			data.algorithm = self.normalizeAlgorithm(data.algorithm);
+			if (!key) throw new Error('key required');
+			if (!item) throw new Error('item required');
 
-			var items = data.item.split(':');
-			var textHex = items[0];
-			var vectorHex = items[1];
-			var saltHex = items[2];
+			algorithm = self.normalizeAlgorithm(algorithm || self.ALGORITHM);
 
-			var bSalt = void 0,
-			    bText = void 0,
-			    bVector = void 0,
-			    bPassword = void 0;
+			var vector = void 0;
+			var items = item.split(':');
 
-			return Promise.all([self.hexToBuffer(textHex), self.hexToBuffer(saltHex), self.hexToBuffer(vectorHex), self.stringToBuffer(data.password)]).then(function (results) {
-				bText = results[0];
-				bSalt = results[1];
-				bVector = results[2];
-				bPassword = results[3];
-			}).then(function () {
-				return self.pbkdf2(bPassword, bSalt, data.iterations, data.bytes, data.hash, data.algorithm);
-			}).then(function (key) {
-				return self.decipher(data.algorithm, key, bVector, bText);
-			}).then(function (bDecrypted) {
-				return self.bufferToString(bDecrypted);
+			key = key.split(':')[0];
+			item = items[0];
+			vector = items[1];
+
+			return Promise.all([self.hexToBuffer(key), self.hexToBuffer(item), self.hexToBuffer(vector)]).then(function (results) {
+				key = results[0];
+				item = results[1];
+				vector = results[2];
+				return self.decipher(algorithm, key, vector, item);
+			}).then(function (decrypted) {
+				return self.bufferToString(decrypted);
 			});
 		}
 	};
@@ -219,207 +201,52 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			return algorithm.toLowerCase();
 		};
 
-		Cyrup.hexToBuffer = function () {
-			var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(hex) {
-				return regeneratorRuntime.wrap(function _callee$(_context) {
-					while (1) {
-						switch (_context.prev = _context.next) {
-							case 0:
-								return _context.abrupt('return', Buffer.from(hex, 'hex'));
+		Cyrup.hexToBuffer = _async(function (hex) {
+			return Buffer.from(hex, 'hex');
+		});
 
-							case 1:
-							case 'end':
-								return _context.stop();
-						}
-					}
-				}, _callee, this);
-			}));
+		Cyrup.bufferToHex = _async(function (buffer) {
+			return buffer.toString('hex');
+		});
 
-			return function (_x) {
-				return _ref.apply(this, arguments);
-			};
-		}();
+		Cyrup.stringToBuffer = _async(function (string) {
+			return Buffer.from(string, 'utf8');
+		});
 
-		Cyrup.bufferToHex = function () {
-			var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(buffer) {
-				return regeneratorRuntime.wrap(function _callee2$(_context2) {
-					while (1) {
-						switch (_context2.prev = _context2.next) {
-							case 0:
-								return _context2.abrupt('return', buffer.toString('hex'));
+		Cyrup.bufferToString = _async(function (buffer) {
+			return buffer.toString('utf8');
+		});
 
-							case 1:
-							case 'end':
-								return _context2.stop();
-						}
-					}
-				}, _callee2, this);
-			}));
+		Cyrup.createHash = _async(function (buffer, type) {
+			return Crypto.createHash(type).update(buffer).digest();
+		});
 
-			return function (_x2) {
-				return _ref2.apply(this, arguments);
-			};
-		}();
+		Cyrup.randomBytes = _async(function (bytes) {
+			return RandomBytes(bytes);
+		});
 
-		Cyrup.stringToBuffer = function () {
-			var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(string) {
-				return regeneratorRuntime.wrap(function _callee3$(_context3) {
-					while (1) {
-						switch (_context3.prev = _context3.next) {
-							case 0:
-								return _context3.abrupt('return', Buffer.from(string, 'utf8'));
+		Cyrup.pbkdf2 = _async(function (password, salt, iterations, size, hash) {
+			return Pbkdf2(password, salt, iterations, size, hash);
+		});
 
-							case 1:
-							case 'end':
-								return _context3.stop();
-						}
-					}
-				}, _callee3, this);
-			}));
+		Cyrup.cipher = _async(function (algorithm, key, vector, data) {
+			var cipher = Crypto.createCipheriv(algorithm, key, vector);
+			return Buffer.concat([cipher.update(data, 'utf8'), cipher.final(), cipher.getAuthTag()]);
+		});
 
-			return function (_x3) {
-				return _ref3.apply(this, arguments);
-			};
-		}();
+		Cyrup.decipher = _async(function (algorithm, key, vector, data) {
+			var _this = this;
 
-		Cyrup.bufferToString = function () {
-			var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(buffer) {
-				return regeneratorRuntime.wrap(function _callee4$(_context4) {
-					while (1) {
-						switch (_context4.prev = _context4.next) {
-							case 0:
-								return _context4.abrupt('return', buffer.toString('utf8'));
+			var self = _this;
+			var buffer = Buffer.from(data, 'hex');
+			var tag = buffer.slice(buffer.byteLength - self.TAG);
+			var text = buffer.slice(0, buffer.byteLength - self.TAG);
+			var decipher = Crypto.createDecipheriv(algorithm, key, vector);
 
-							case 1:
-							case 'end':
-								return _context4.stop();
-						}
-					}
-				}, _callee4, this);
-			}));
+			decipher.setAuthTag(tag);
 
-			return function (_x4) {
-				return _ref4.apply(this, arguments);
-			};
-		}();
-
-		Cyrup.createHash = function () {
-			var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(buffer, type) {
-				return regeneratorRuntime.wrap(function _callee5$(_context5) {
-					while (1) {
-						switch (_context5.prev = _context5.next) {
-							case 0:
-								return _context5.abrupt('return', Crypto.createHash(type).update(buffer).digest());
-
-							case 1:
-							case 'end':
-								return _context5.stop();
-						}
-					}
-				}, _callee5, this);
-			}));
-
-			return function (_x5, _x6) {
-				return _ref5.apply(this, arguments);
-			};
-		}();
-
-		Cyrup.randomBytes = function () {
-			var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(bytes) {
-				return regeneratorRuntime.wrap(function _callee6$(_context6) {
-					while (1) {
-						switch (_context6.prev = _context6.next) {
-							case 0:
-								return _context6.abrupt('return', RandomBytes(bytes));
-
-							case 1:
-							case 'end':
-								return _context6.stop();
-						}
-					}
-				}, _callee6, this);
-			}));
-
-			return function (_x7) {
-				return _ref6.apply(this, arguments);
-			};
-		}();
-
-		Cyrup.pbkdf2 = function () {
-			var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(password, salt, iterations, bytes, hash) {
-				return regeneratorRuntime.wrap(function _callee7$(_context7) {
-					while (1) {
-						switch (_context7.prev = _context7.next) {
-							case 0:
-								return _context7.abrupt('return', Pbkdf2(password, salt, iterations, bytes, hash));
-
-							case 1:
-							case 'end':
-								return _context7.stop();
-						}
-					}
-				}, _callee7, this);
-			}));
-
-			return function (_x8, _x9, _x10, _x11, _x12) {
-				return _ref7.apply(this, arguments);
-			};
-		}();
-
-		Cyrup.cipher = function () {
-			var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(algorithm, key, vector, data) {
-				var self, cipher;
-				return regeneratorRuntime.wrap(function _callee8$(_context8) {
-					while (1) {
-						switch (_context8.prev = _context8.next) {
-							case 0:
-								self = this;
-								cipher = Crypto.createCipheriv(algorithm, key, vector);
-								return _context8.abrupt('return', Buffer.concat([cipher.update(data, 'utf8'), cipher.final(), cipher.getAuthTag()]));
-
-							case 3:
-							case 'end':
-								return _context8.stop();
-						}
-					}
-				}, _callee8, this);
-			}));
-
-			return function (_x13, _x14, _x15, _x16) {
-				return _ref8.apply(this, arguments);
-			};
-		}();
-
-		Cyrup.decipher = function () {
-			var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(algorithm, key, vector, data) {
-				var self, buffer, tag, text, decipher;
-				return regeneratorRuntime.wrap(function _callee9$(_context9) {
-					while (1) {
-						switch (_context9.prev = _context9.next) {
-							case 0:
-								self = this;
-								buffer = Buffer.from(data, 'hex');
-								tag = buffer.slice(buffer.byteLength - self.TAG_BYTES);
-								text = buffer.slice(0, buffer.byteLength - self.TAG_BYTES);
-								decipher = Crypto.createDecipheriv(algorithm, key, vector);
-
-
-								decipher.setAuthTag(tag);
-
-								return _context9.abrupt('return', Buffer.concat([decipher.update(text), decipher.final()]));
-
-							case 7:
-							case 'end':
-								return _context9.stop();
-						}
-					}
-				}, _callee9, this);
-			}));
-
-			return function (_x17, _x18, _x19, _x20) {
-				return _ref9.apply(this, arguments);
-			};
-		}();
+			return Buffer.concat([decipher.update(text), decipher.final()]);
+		});
 	} else {
 
 		Cyrup.normalizeHash = function (hash) {
@@ -433,7 +260,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 		};
 
 		Cyrup.getAuthTag = function (encrypted) {
-			return encrypted.slice(encrypted.byteLength - this.TAG_BYTES);
+			return encrypted.slice(encrypted.byteLength - this.TAG);
 		};
 
 		Cyrup.hexToBuffer = function (hex) {
@@ -507,40 +334,38 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 			});
 		};
 
-		Cyrup.pbkdf2 = function (password, salt, iterations, bytes, hash, algorithm) {
+		Cyrup.pbkdf2 = function (password, salt, iterations, size, hash) {
+			return Promise.resolve().then(function () {
+				return window.crypto.subtle.importKey('raw', password, { name: 'PBKDF2' }, false, ['deriveBits']);
+			}).then(function (key) {
+				return window.crypto.subtle.deriveBits({
+					salt: salt,
+					iterations: iterations,
+					name: 'PBKDF2',
+					hash: { name: hash }
+				}, key, size << 3);
+			}).then(function (bits) {
+				return new Uint8Array(bits);
+			});
+		};
+
+		Cyrup.cipher = function (algorithm, key, vector, item) {
 			var self = this;
 			return Promise.resolve().then(function () {
-				if (!salt) throw new Error('salt required');
-				if (!hash) throw new Error('hash required');
-				if (!bytes) throw new Error('bytes required');
-				if (!password) throw new Error('password required');
-				if (!algorithm) throw new Error('algorithm required');
-				if (!iterations) throw new Error('iterations required');
-			}).then(function () {
-				return window.crypto.subtle.importKey('raw', password, { name: 'PBKDF2' }, false, ['deriveBits', 'deriveKey']);
-			}).then(function (key) {
-				return window.crypto.subtle.deriveKey({
-					salt: salt,
-					hash: hash,
-					iterations: iterations,
-					name: 'PBKDF2'
-				}, key, {
-					name: algorithm,
-					length: bytes * 8,
-					tagLength: self.TAG_BYTES * 8
-				}, false, ['encrypt', 'decrypt']);
+				return window.crypto.subtle.importKey('raw', key, { name: algorithm }, false, ['encrypt']);
+			}).then(function (data) {
+				var tagLength = self.TAG * 8;
+				return window.crypto.subtle.encrypt({ name: algorithm, iv: vector, tagLength: tagLength }, data, item);
 			});
 		};
 
-		Cyrup.cipher = function (algorithm, key, vector, data) {
+		Cyrup.decipher = function (algorithm, key, vector, item) {
+			var self = this;
 			return Promise.resolve().then(function () {
-				return window.crypto.subtle.encrypt({ name: algorithm, iv: vector }, key, data);
-			});
-		};
-
-		Cyrup.decipher = function (algorithm, key, vector, data) {
-			return Promise.resolve().then(function () {
-				return window.crypto.subtle.decrypt({ name: algorithm, iv: vector }, key, data);
+				return window.crypto.subtle.importKey('raw', key, { name: algorithm }, false, ['decrypt']);
+			}).then(function (data) {
+				var tagLength = self.TAG * 8;
+				return window.crypto.subtle.decrypt({ name: algorithm, iv: vector, tagLength: tagLength }, data, item);
 			});
 		};
 	}
