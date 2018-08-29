@@ -1,6 +1,6 @@
 /*
 	Name: cyrup
-	Version: 0.2.4
+	Version: 0.3.0
 	License: MPL-2.0
 	Author: Alexander Elias
 	Email: alex.steven.elias@gmail.com
@@ -10,8 +10,9 @@
 */
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-var _async = function () {
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
+var _async = function () {
 	try {
 		if (isNaN.apply(null, {})) {
 			return function (f) {
@@ -36,10 +37,7 @@ var _async = function () {
 			}
 		};
 	};
-}(),
-    _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-function _await(value, then, direct) {
+}();function _await(value, then, direct) {
 	if (direct) {
 		return then ? then(value) : value;
 	}value = Promise.resolve(value);return then ? value.then(then) : value;
@@ -57,80 +55,63 @@ function _await(value, then, direct) {
 		TAG: 16,
 		SALT: 16,
 		VECTOR: 12,
-		SECRET: 48,
+		RANDOM: 48,
 		HASH: 'sha-512',
 		ALGORITHM: 'aes-256-gcm',
 
-		passwordHash: _async(function (password) {
+		random: _async(function (size) {
 			var _this = this;
 
 			var self = _this;
 
-			if (!password) throw new Error('password required');
-
-			return self.key(password);
-		}),
-		passwordCompare: _async(function (passwordText, passwordHash) {
-			var _this2 = this;
-
-			var self = _this2;
-
-			if (!passwordText) throw new Error('password text required');
-			if (!passwordHash) throw new Error('password hash required');
-
-			return _await(self.hexToBuffer(passwordHash.split(':')[1]), function (salt) {
-				return _await(self.key(passwordText, { salt: salt }), function (data) {
-
-					return data === passwordHash;
-				});
-			});
-		}),
-		random: _async(function (size) {
-			var _this3 = this;
-
-			var self = _this3;
-
-			if (!size) throw new Error('size required');
-
-			return _await(self.randomBytes(size), function (buffer) {
-				return _await(self.bufferToHex(buffer));
-			});
-		}),
-		secret: _async(function (size) {
-			var _this4 = this;
-
-			var self = _this4;
-
-			size = size || self.SECRET;
+			size = size || self.RANDOM;
 
 			return _await(self.randomBytes(size), function (buffer) {
 				return _await(self.bufferToHex(buffer));
 			});
 		}),
 		hash: _async(function (item, type) {
-			var _this5 = this;
+			var _this2 = this;
 
-			var self = _this5;
+			var self = _this2;
 
 			if (!item) throw new Error('item required');
 
 			type = self.normalizeHash(type || self.HASH);
 
 			return _await(self.stringToBuffer(item), function (buffer) {
-				return _await(self.createHash(buffer, type), function (hash) {
-					return _await(self.bufferToHex(buffer));
+				return _await(self.createHash(buffer, type), function (bufferHash) {
+					return _await(self.bufferToHex(bufferHash));
+				});
+			});
+		}),
+		compare: _async(function (password, key) {
+			var _this3 = this;
+
+			var self = _this3;
+
+			if (!key) throw new Error('key required');
+			if (!password) throw new Error('password required');
+
+			return _await(self.hexToBuffer(key.split(':')[1]), function (salt) {
+				return _await(self.key(password, { salt: salt }), function (data) {
+
+					return data === key;
 				});
 			});
 		}),
 		key: _async(function (item, data) {
-			var _this6 = this;
+			var _this4 = this;
 
-			var self = _this6;if (!item) throw new Error('item required');
+			var self = _this4;
+
+			if (!item) throw new Error('item required');
 
 			data = data || {};
 			data.size = data.size || self.KEY;
 			data.salt = data.salt || self.SALT;
-			data.iterations = data.iterations || self.ITERATIONS;data.hash = self.normalizeHash(data.hash || self.HASH);
+			data.iterations = data.iterations || self.ITERATIONS;
+			data.hash = self.normalizeHash(data.hash || self.HASH);
 
 			return _await(Promise.all([typeof item === 'string' ? self.stringToBuffer(item) : item, typeof data.salt === 'string' ? self.stringToBuffer(data.salt) : typeof data.salt === 'number' ? self.randomBytes(data.salt) : data.salt]), function (_ref) {
 				var _ref2 = _slicedToArray(_ref, 2),
@@ -149,9 +130,9 @@ function _await(value, then, direct) {
 			});
 		}),
 		encrypt: _async(function (data, key, algorithm, vector) {
-			var _this7 = this;
+			var _this5 = this;
 
-			var self = _this7;
+			var self = _this5;
 
 			if (!key) throw new Error('key required');
 			if (!data) throw new Error('data required');
@@ -178,9 +159,9 @@ function _await(value, then, direct) {
 			});
 		}),
 		decrypt: _async(function (data, key, algorithm) {
-			var _this8 = this;
+			var _this6 = this;
 
-			var self = _this8;
+			var self = _this6;
 
 			if (!key) throw new Error('key required');
 			if (!data) throw new Error('data required');
@@ -253,9 +234,9 @@ function _await(value, then, direct) {
 		});
 
 		Cyrup.decipher = _async(function (algorithm, key, vector, data) {
-			var _this9 = this;
+			var _this7 = this;
 
-			var self = _this9;
+			var self = _this7;
 			var buffer = Buffer.from(data, 'hex');
 			var tag = buffer.slice(buffer.byteLength - self.TAG);
 			var text = buffer.slice(0, buffer.byteLength - self.TAG);
@@ -355,9 +336,9 @@ function _await(value, then, direct) {
 		});
 
 		Cyrup.cipher = _async(function (algorithm, key, vector, data) {
-			var _this10 = this;
+			var _this8 = this;
 
-			var self = _this10;
+			var self = _this8;
 
 			return _await(window.crypto.subtle.importKey('raw', key, {
 				name: algorithm
@@ -371,9 +352,9 @@ function _await(value, then, direct) {
 		});
 
 		Cyrup.decipher = _async(function (algorithm, key, vector, data) {
-			var _this11 = this;
+			var _this9 = this;
 
-			var self = _this11;
+			var self = _this9;
 
 			return _await(window.crypto.subtle.importKey('raw', key, {
 				name: algorithm

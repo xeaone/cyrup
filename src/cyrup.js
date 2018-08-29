@@ -8,45 +8,14 @@ const Cyrup = {
 	TAG: 16,
 	SALT: 16,
 	VECTOR: 12,
-	SECRET: 48,
+	RANDOM: 48,
 	HASH: 'sha-512',
 	ALGORITHM: 'aes-256-gcm',
-
-	async passwordHash (password) {
-		const self = this;
-
-		if (!password) throw new Error('password required');
-
-		return self.key(password);
-	},
-
-	async passwordCompare (passwordText, passwordHash) {
-		const self = this;
-
-		if (!passwordText) throw new Error('password text required');
-		if (!passwordHash) throw new Error('password hash required');
-
-		const salt = await self.hexToBuffer(passwordHash.split(':')[1]);
-		const data = await self.key(passwordText, { salt });
-
-		return data === passwordHash;
-	},
 
 	async random (size) {
 		const self = this;
 
-		if (!size) throw new Error('size required');
-
-		const buffer = await self.randomBytes(size);
-		const hex = await self.bufferToHex(buffer);
-
-		return hex;
-	},
-
-	async secret (size) {
-		const self = this;
-
-		size = size || self.SECRET;
+		size = size || self.RANDOM;
 
 		const buffer = await self.randomBytes(size);
 		const hex = await self.bufferToHex(buffer);
@@ -68,6 +37,18 @@ const Cyrup = {
 		return hex;
 	},
 
+	async compare (password, key) {
+		const self = this;
+
+		if (!key) throw new Error('key required');
+		if (!password) throw new Error('password required');
+
+		const salt = await self.hexToBuffer(key.split(':')[1]);
+		const data = await self.key(password, { salt });
+
+		return data === key;
+	},
+
 	async key (item, data) {
 		const self = this;
 
@@ -80,12 +61,16 @@ const Cyrup = {
 		data.hash = self.normalizeHash(data.hash || self.HASH);
 
 		const [bItem, bSalt] = await Promise.all([
-			typeof item === 'string' ? self.stringToBuffer(item) : item,
+
+			typeof item === 'string' ?
+				self.stringToBuffer(item) : item,
+
 			typeof data.salt === 'string' ?
 				self.stringToBuffer(data.salt) :
 				typeof data.salt === 'number' ?
 					self.randomBytes(data.salt) :
 					data.salt
+					
 		]);
 
 		const bKey = await self.pbkdf2(bItem, bSalt, data.iterations, data.size, data.hash);
