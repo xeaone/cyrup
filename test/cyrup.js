@@ -1,7 +1,6 @@
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 var _async = function () {
-
 	try {
 		if (isNaN.apply(null, {})) {
 			return function (f) {
@@ -17,7 +16,8 @@ var _async = function () {
 	} catch (e) {}return function (f) {
 		// Pre-ES5.1 JavaScript runtimes don't accept array-likes in Function.apply
 		return function () {
-			var args = [];for (var i = 0; i < arguments.length; i++) {
+			var args = [];
+			for (var i = 0; i < arguments.length; i++) {
 				args[i] = arguments[i];
 			}try {
 				return Promise.resolve(f.apply(this, args));
@@ -107,20 +107,23 @@ function _await(value, then, direct) {
 			type = self.normalizeHash(type || self.HASH);
 
 			return _await(self.stringToBuffer(item), function (buffer) {
-				return _await(self.createHash(buffer, type), function (hash) {
-					return _await(self.bufferToHex(buffer));
+				return _await(self.createHash(buffer, type), function (bufferHash) {
+					return _await(self.bufferToHex(bufferHash));
 				});
 			});
 		}),
 		key: _async(function (item, data) {
 			var _this6 = this;
 
-			var self = _this6;if (!item) throw new Error('item required');
+			var self = _this6;
+
+			if (!item) throw new Error('item required');
 
 			data = data || {};
 			data.size = data.size || self.KEY;
 			data.salt = data.salt || self.SALT;
-			data.iterations = data.iterations || self.ITERATIONS;data.hash = self.normalizeHash(data.hash || self.HASH);
+			data.iterations = data.iterations || self.ITERATIONS;
+			data.hash = self.normalizeHash(data.hash || self.HASH);
 
 			return _await(Promise.all([typeof item === 'string' ? self.stringToBuffer(item) : item, typeof data.salt === 'string' ? self.stringToBuffer(data.salt) : typeof data.salt === 'number' ? self.randomBytes(data.salt) : data.salt]), function (_ref) {
 				var _ref2 = _slicedToArray(_ref, 2),

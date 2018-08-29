@@ -62,8 +62,8 @@ const Cyrup = {
 		type = self.normalizeHash(type || self.HASH);
 
 		const buffer = await self.stringToBuffer(item);
-		const hash = await self.createHash(buffer, type);
-		const hex = await self.bufferToHex(buffer);
+		const bufferHash = await self.createHash(buffer, type);
+		const hex = await self.bufferToHex(bufferHash);
 
 		return hex;
 	},
