@@ -44,6 +44,15 @@ module.exports = {
 
 	},
 
+	async key () {
+
+		console.time('key');
+		const key = await Cyrup.key(PASSWORD);
+		console.timeEnd('key');
+
+		console.log(`key: ${key}`);
+	},
+
 	async hash () {
 		const item = 'hash is good for you?';
 		const hash = await Cyrup.hash(item);
