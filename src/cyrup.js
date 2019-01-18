@@ -26,7 +26,7 @@ const Cyrup = {
 	async hash (item, type) {
 		const self = this;
 
-		if (!item) throw new Error('item required');
+		if (!item) throw new Error('Cyrup.hash - item argument required');
 
 		type = self.normalizeHash(type || self.HASH);
 
@@ -40,8 +40,8 @@ const Cyrup = {
 	async compare (password, key) {
 		const self = this;
 
-		if (!key) throw new Error('key required');
-		if (!password) throw new Error('password required');
+		if (!key) throw new Error('Cyrup.compare - key argument required');
+		if (!password) throw new Error('Cyrup.compare - password argument required');
 
 		const salt = await self.hexToBuffer(key.split(':')[1]);
 		const data = await self.key(password, { salt });
@@ -52,7 +52,7 @@ const Cyrup = {
 	async key (item, data) {
 		const self = this;
 
-		if (!item) throw new Error('item required');
+		if (!item) throw new Error('Cyrup.key - item argument required');
 
 		data = data || {};
 		data.size = data.size || self.KEY;
@@ -70,7 +70,7 @@ const Cyrup = {
 				typeof data.salt === 'number' ?
 					self.randomBytes(data.salt) :
 					data.salt
-					
+
 		]);
 
 		const bKey = await self.pbkdf2(bItem, bSalt, data.iterations, data.size, data.hash);
@@ -86,8 +86,8 @@ const Cyrup = {
 	async encrypt (data, key, algorithm, vector) {
 		const self = this;
 
-		if (!key) throw new Error('key required');
-		if (!data) throw new Error('data required');
+		if (!key) throw new Error('Cyrup.encrypt - key argument required');
+		if (!data) throw new Error('Cyrup.encrypt - data argument required');
 
 		key = key.split(':');
 		vector = vector || self.VECTOR;
@@ -112,8 +112,8 @@ const Cyrup = {
 	async decrypt (data, key, algorithm) {
 		const self = this;
 
-		if (!key) throw new Error('key required');
-		if (!data) throw new Error('data required');
+		if (!key) throw new Error('Cyrup.decrypt - key argument required');
+		if (!data) throw new Error('Cyrup.decrypt - data argument required');
 
 		algorithm = self.normalizeAlgorithm(algorithm || self.ALGORITHM);
 
@@ -215,11 +215,11 @@ if (typeof window === 'undefined') {
 	Cyrup.hexToBuffer = async function (hex) {
 
 		if (typeof hex !== 'string') {
-			throw new TypeError('Expected input to be a string');
+			throw new TypeError('Cyrup.hexToBuffer - expected input to be a string');
 		}
 
 		if ((hex.length % 2) !== 0) {
-			throw new RangeError('Expected string to be an even number of characters');
+			throw new RangeError('Cyrup.hexToBuffer - expected string to be an even number of characters');
 		}
 
 		const bytes = new Uint8Array(hex.length / 2);

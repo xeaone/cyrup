@@ -1,6 +1,6 @@
 /*
 	Name: cyrup
-	Version: 0.3.0
+	Version: 0.4.0
 	License: MPL-2.0
 	Author: Alexander Elias
 	Email: alex.steven.elias@gmail.com
@@ -28,7 +28,8 @@ var _async = function () {
 	} catch (e) {}return function (f) {
 		// Pre-ES5.1 JavaScript runtimes don't accept array-likes in Function.apply
 		return function () {
-			var args = [];for (var i = 0; i < arguments.length; i++) {
+			var args = [];
+			for (var i = 0; i < arguments.length; i++) {
 				args[i] = arguments[i];
 			}try {
 				return Promise.resolve(f.apply(this, args));
@@ -75,7 +76,7 @@ var _async = function () {
 
 			var self = _this2;
 
-			if (!item) throw new Error('item required');
+			if (!item) throw new Error('Cyrup.hash - item argument required');
 
 			type = self.normalizeHash(type || self.HASH);
 
@@ -90,8 +91,8 @@ var _async = function () {
 
 			var self = _this3;
 
-			if (!key) throw new Error('key required');
-			if (!password) throw new Error('password required');
+			if (!key) throw new Error('Cyrup.compare - key argument required');
+			if (!password) throw new Error('Cyrup.compare - password argument required');
 
 			return _await(self.hexToBuffer(key.split(':')[1]), function (salt) {
 				return _await(self.key(password, { salt: salt }), function (data) {
@@ -105,7 +106,7 @@ var _async = function () {
 
 			var self = _this4;
 
-			if (!item) throw new Error('item required');
+			if (!item) throw new Error('Cyrup.key - item argument required');
 
 			data = data || {};
 			data.size = data.size || self.KEY;
@@ -134,8 +135,8 @@ var _async = function () {
 
 			var self = _this5;
 
-			if (!key) throw new Error('key required');
-			if (!data) throw new Error('data required');
+			if (!key) throw new Error('Cyrup.encrypt - key argument required');
+			if (!data) throw new Error('Cyrup.encrypt - data argument required');
 
 			key = key.split(':');
 			vector = vector || self.VECTOR;
@@ -163,8 +164,8 @@ var _async = function () {
 
 			var self = _this6;
 
-			if (!key) throw new Error('key required');
-			if (!data) throw new Error('data required');
+			if (!key) throw new Error('Cyrup.decrypt - key argument required');
+			if (!data) throw new Error('Cyrup.decrypt - data argument required');
 
 			algorithm = self.normalizeAlgorithm(algorithm || self.ALGORITHM);
 
@@ -265,11 +266,11 @@ var _async = function () {
 		Cyrup.hexToBuffer = _async(function (hex) {
 
 			if (typeof hex !== 'string') {
-				throw new TypeError('Expected input to be a string');
+				throw new TypeError('Cyrup.hexToBuffer - expected input to be a string');
 			}
 
 			if (hex.length % 2 !== 0) {
-				throw new RangeError('Expected string to be an even number of characters');
+				throw new RangeError('Cyrup.hexToBuffer - expected string to be an even number of characters');
 			}
 
 			var bytes = new Uint8Array(hex.length / 2);
