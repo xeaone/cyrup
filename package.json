@@ -1,26 +1,29 @@
 {
-	"name": "cyrup",
-	"version": "0.4.0",
-	"description": "Crypto Library For Node & Browsers",
-	"main": "dst/cyrup.js",
-	"scripts": {
-		"t": "node test",
-		"b": "node build.js",
-		"s": "muleify -sw test",
-		"w": "muleify -pwbt src/cyrup.js test/cyrup.js"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/AlexanderElias/cyrup.git"
-	},
-	"keywords": [
-		"crypto"
-	],
-	"email": "alex.steven.elias@gmail.com",
-	"author": "Alexander Elias",
-	"license": "MPL-2.0",
-	"bugs": {
-		"url": "https://github.com/AlexanderElias/cyrup/issues"
-	},
-	"homepage": "https://github.com/AlexanderElias/cyrup#readme"
+    "name": "cyrup",
+    "version": "0.5.0",
+    "description": "Crypto Library For Node & Browsers",
+    "main": "dst/cyrup.js",
+    "scripts": {
+        "t": "node test",
+        "b": "node build.js",
+        "s": "muleify -sw test",
+        "w": "muleify -pwbt src/cyrup.js test/cyrup.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/AlexanderElias/cyrup.git"
+    },
+    "keywords": [
+        "crypto"
+    ],
+    "email": "alex.steven.elias@gmail.com",
+    "author": "Alexander Elias",
+    "license": "MPL-2.0",
+    "bugs": {
+        "url": "https://github.com/AlexanderElias/cyrup/issues"
+    },
+    "homepage": "https://github.com/AlexanderElias/cyrup#readme",
+    "devDependencies": {
+        "muleify": "^5.3.1"
+    }
 }

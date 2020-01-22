@@ -1,17 +1,15 @@
 const methods = require('./methods.js');
 
-(async function() {
+(async function () {
 
-	const name = process.argv[2];
+    const name = process.argv[2];
 
-	if (!(name in methods)) {
-		const names = Object.keys(methods).join('\n\t');
-		console.log(`Argument Required: \n\t${names}`);
-		return;
-	}
+    if (!(name in methods)) {
+        const names = Object.keys(methods).join('\n\t');
+        console.log(`Argument Required: \n\t${names}`);
+        return;
+    }
 
-	await methods[name]();
+    await methods[name]();
 
-}()).catch(function (error) {
-	console.error(error);
-});
+}()).catch(console.error);

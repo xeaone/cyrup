@@ -1,12 +1,12 @@
 /*
-	Name: cyrup
-	Version: 0.4.0
-	License: MPL-2.0
-	Author: Alexander Elias
-	Email: alex.steven.elias@gmail.com
-	This Source Code Form is subject to the terms of the Mozilla Public
-	License, v. 2.0. If a copy of the MPL was not distributed with this
-	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    Name: cyrup
+    Version: 0.5.0
+    License: MPL-2.0
+    Author: Alexander Elias
+    Email: alex.steven.elias@gmail.com
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
@@ -28,8 +28,7 @@ var _async = function () {
 	} catch (e) {}return function (f) {
 		// Pre-ES5.1 JavaScript runtimes don't accept array-likes in Function.apply
 		return function () {
-			var args = [];
-			for (var i = 0; i < arguments.length; i++) {
+			var args = [];for (var i = 0; i < arguments.length; i++) {
 				args[i] = arguments[i];
 			}try {
 				return Promise.resolve(f.apply(this, args));
@@ -41,7 +40,8 @@ var _async = function () {
 }();function _await(value, then, direct) {
 	if (direct) {
 		return then ? then(value) : value;
-	}value = Promise.resolve(value);return then ? value.then(then) : value;
+	}value = Promise.resolve(value);
+	return then ? value.then(then) : value;
 }(function (global, factory) {
 	(typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define('Cyrup', factory) : global.Cyrup = factory();
 })(this, function () {

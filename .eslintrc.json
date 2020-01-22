@@ -1,0 +1,26 @@
+{
+    "extends": "eslint:recommended",
+    "env": {
+        "node": true,
+        "es2020": true,
+        "browser": true
+    },
+    "parserOptions": {
+        "ecmaVersion": 2020,
+        "sourceType": "module"
+    },
+    "globals": {
+        "Cyrup": "readonly"
+    },
+    "rules": {
+        "strict": "warn",
+        "no-unused-vars": "warn",
+        "indent": [ "warn", 4 ],
+        "semi": [ "warn", "always" ],
+        "quotes": [ "warn", "single" ],
+        "comma-dangle": [ "warn", "never" ],
+        "linebreak-style": [ "warn", "unix" ],
+        "array-bracket-spacing": [ "warn", "always" ],
+        "space-before-function-paren": [ "warn", "always" ]
+    }
+}
