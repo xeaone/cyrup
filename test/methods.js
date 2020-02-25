@@ -59,14 +59,9 @@ module.exports = {
         console.log(`hash: ${hash}`);
     },
 
-    async secret () {
-        const secret = await Cyrup.secret();
-        console.log(`secret: ${secret}`);
-    },
-
     async random () {
         const random = await Cyrup.random(32);
         console.log(`random: ${random}`);
     }
-    
+
 };

@@ -1,6 +1,6 @@
 /*
     Name: cyrup
-    Version: 0.5.0
+    Version: 0.6.0
     License: MPL-2.0
     Author: Alexander Elias
     Email: alex.steven.elias@gmail.com
@@ -56,7 +56,7 @@ var _async = function () {
 		TAG: 16,
 		SALT: 16,
 		VECTOR: 12,
-		RANDOM: 48,
+		RANDOM: 20,
 		HASH: 'sha-512',
 		ALGORITHM: 'aes-256-gcm',
 

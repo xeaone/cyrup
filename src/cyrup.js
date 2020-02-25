@@ -8,7 +8,7 @@ const Cyrup = {
     TAG: 16,
     SALT: 16,
     VECTOR: 12,
-    RANDOM: 48,
+    RANDOM: 20,
     HASH: 'sha-512',
     ALGORITHM: 'aes-256-gcm',
 

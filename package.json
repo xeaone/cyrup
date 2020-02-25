@@ -1,6 +1,6 @@
 {
     "name": "cyrup",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "description": "Crypto Library For Node & Browsers",
     "main": "dst/cyrup.js",
     "scripts": {
@@ -11,7 +11,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/AlexanderElias/cyrup.git"
+        "url": "git+https://github.com/vokeio/cyrup.git"
     },
     "keywords": [
         "crypto"
@@ -20,9 +20,9 @@
     "author": "Alexander Elias",
     "license": "MPL-2.0",
     "bugs": {
-        "url": "https://github.com/AlexanderElias/cyrup/issues"
+        "url": "https://github.com/vokeio/cyrup/issues"
     },
-    "homepage": "https://github.com/AlexanderElias/cyrup#readme",
+    "homepage": "https://github.com/vokeio/cyrup#readme",
     "devDependencies": {
         "muleify": "^5.3.1"
     }
