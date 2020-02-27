@@ -1,6 +1,6 @@
 /*
     Name: cyrup
-    Version: 0.6.0
+    Version: 0.7.1
     License: MPL-2.0
     Author: Alexander Elias
     Email: alex.steven.elias@gmail.com
@@ -492,10 +492,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		Role: Role,
 		Access: Access,
 		Permission: Permission,
-		role: Role,
-		access: Access,
-		permission: Permission,
 
+		role: function role() {
+			return new (Function.prototype.bind.apply(Role, [null].concat(Array.prototype.slice.call(arguments))))();
+		},
+		access: function access() {
+			return new (Function.prototype.bind.apply(Access, [null].concat(Array.prototype.slice.call(arguments))))();
+		},
+		permission: function permission() {
+			return new (Function.prototype.bind.apply(Permission, [null].concat(Array.prototype.slice.call(arguments))))();
+		},
 		random: _async(function (size) {
 			var _this3 = this;
 

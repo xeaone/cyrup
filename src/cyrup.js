@@ -18,9 +18,18 @@ const Cyrup = {
     Role,
     Access,
     Permission,
-    role: Role,
-    access: Access,
-    permission: Permission,
+
+    role () {
+        return new Role(...arguments);
+    },
+
+    access () {
+        return new Access(...arguments);
+    },
+
+    permission () {
+        return new Permission(...arguments);
+    },
 
     async random (size) {
         const self = this;
