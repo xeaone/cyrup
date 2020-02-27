@@ -10,6 +10,8 @@
 */
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _async = function () {
@@ -40,12 +42,439 @@ var _async = function () {
 }();function _await(value, then, direct) {
 	if (direct) {
 		return then ? then(value) : value;
-	}value = Promise.resolve(value);
-	return then ? value.then(then) : value;
-}(function (global, factory) {
+	}value = Promise.resolve(value);return then ? value.then(then) : value;
+}
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+(function (global, factory) {
 	(typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define('Cyrup', factory) : global.Cyrup = factory();
 })(this, function () {
 	'use strict';
+
+	var Permission = function () {
+		function Permission() {
+			var _this = this;
+
+			var permission = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+			_classCallCheck(this, Permission);
+
+			var allows = permission.allows,
+			    denies = permission.denies,
+			    requires = permission.requires,
+			    action = permission.action,
+			    resource = permission.resource,
+			    behavior = permission.behavior;
+
+
+			this._edit = true;
+			this._action = null;
+			this._resource = null;
+			this._behavior = null;
+			this._allows = [];
+			this._denies = [];
+			this._requires = {};
+
+			if ('action' in permission) this.action(action);
+			if ('resource' in permission) this.resource(resource);
+			if ('behavior' in permission) this.behavior(behavior);
+
+			if ('allows' in permission) {
+				if (allows instanceof Array === false) throw new Error('permission allows illegal type');
+				allows.forEach(function (allow) {
+					return _this.allow(allow);
+				});
+			}
+
+			if ('denies' in permission) {
+				if (denies instanceof Array === false) throw new Error('permission denies illegal type');
+				denies.forEach(function (deny) {
+					return _this.deny(deny);
+				});
+			}
+
+			if ('requires' in permission) {
+				if (requires instanceof Object === false) throw new Error('permission requires illegal type');
+				Object.entries(requires).forEach(function (_ref) {
+					var _ref2 = _slicedToArray(_ref, 2),
+					    name = _ref2[0],
+					    value = _ref2[1];
+
+					return _this.require(name, value);
+				});
+			}
+		}
+
+		_createClass(Permission, [{
+			key: 'action',
+			value: function action(_action2) {
+
+				if (_action2 === undefined) return this._action;
+				if (typeof _action2 !== 'string') throw new Error('permission action string required');
+
+				this._action = _action2;
+
+				return this;
+			}
+		}, {
+			key: 'resource',
+			value: function resource(_resource2) {
+
+				if (_resource2 === undefined) return this._resource;
+				if (typeof _resource2 !== 'string') throw new Error('permission resource string required');
+
+				this._resource = _resource2;
+
+				return this;
+			}
+		}, {
+			key: 'behavior',
+			value: function behavior(_behavior) {
+
+				if (_behavior === undefined) return this._behavior;
+				if (typeof _behavior !== 'boolean') throw new Error('permission behavior boolean required');
+
+				this._behavior = _behavior;
+
+				return this;
+			}
+		}, {
+			key: 'allow',
+			value: function allow(_allow) {
+
+				if (_allow === undefined) return this._allows;
+				if (typeof _allow !== 'string') throw new Error('permission allow string required');
+
+				var exists = this._allows.includes(_allow);
+				if (exists) throw new Error('permission allow ' + _allow + ' exists');
+
+				this._allows.push(_allow);
+
+				return this;
+			}
+		}, {
+			key: 'deny',
+			value: function deny(_deny) {
+
+				if (_deny === undefined) return this._denies;
+				if (typeof _deny !== 'string') throw new Error('permission deny string required');
+
+				var exists = this._denies.includes(_deny);
+				if (exists) throw new Error('permission deny ' + _deny + ' exists');
+
+				this._denies.push(_deny);
+
+				return this;
+			}
+		}, {
+			key: 'require',
+			value: function require(name, value) {
+
+				if (name === undefined && value === undefined) return this._requires;
+				if (typeof name !== 'string') throw new Error('permission name string required');
+				if (typeof value !== 'string') throw new Error('permission value string required');
+
+				this._requires[name] = value;
+
+				return this;
+			}
+		}, {
+			key: 'edit',
+			value: function edit(_edit) {
+
+				if (_edit === undefined) return this._edit;
+				if (typeof _edit !== 'boolean') throw new Error('permission edit boolean required');
+
+				this._edit = _edit;
+
+				return this;
+			}
+		}, {
+			key: 'validate',
+			value: function validate() {
+
+				if (typeof this._action !== 'string') throw new Error('permission action required');
+				if (typeof this._resource !== 'string') throw new Error('permission resource required');
+				if (typeof this._behavior !== 'boolean') throw new Error('permission behavior required');
+
+				return this;
+			}
+		}, {
+			key: 'valid',
+			value: function valid() {
+
+				if (typeof this._action !== 'string') return false;
+				if (typeof this._resource !== 'string') return false;
+				if (typeof this._behavior !== 'boolean') return false;
+
+				return true;
+			}
+		}, {
+			key: 'toJSON',
+			value: function toJSON() {
+				return {
+					action: this._action,
+					resource: this._resource,
+					behavior: this._behavior,
+					allows: this._allows,
+					denies: this._denies,
+					requires: this._requires
+				};
+			}
+		}]);
+
+		return Permission;
+	}();
+
+	var Role = function () {
+		function Role() {
+			var _this2 = this;
+
+			var role = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+			_classCallCheck(this, Role);
+
+			var name = role.name,
+			    active = role.active,
+			    permissions = role.permissions;
+
+
+			this._edit = true;
+			this._name = null;
+			this._active = null;
+			this._permissions = [];
+
+			if ('name' in role) this.name(name);
+			if ('active' in role) this.active(active);
+
+			if ('permissions' in role) {
+				if (permissions instanceof Array === false) throw new Error('role permissions illegal type');
+				permissions.forEach(function (permission) {
+					return _this2.add(permission);
+				});
+			}
+		}
+
+		_createClass(Role, [{
+			key: 'add',
+			value: function add(permission) {
+
+				if (permission instanceof Permission === false) throw new Error('role add requires permission');
+				if (permission.valid() === false) throw new Error('role add permission invalid');
+
+				var action = permission.action();
+				var resource = permission.resource();
+
+				var exists = this._permissions.find(function (_ref3) {
+					var _resource = _ref3._resource,
+					    _action = _ref3._action;
+
+					return _resource === resource && _action === action;
+				});
+
+				if (exists) throw new Error('role add permission ' + resource + ' ' + action + ' exists');
+
+				this._permissions.push(permission);
+
+				return this;
+			}
+		}, {
+			key: 'name',
+			value: function name(_name) {
+
+				if (_name === undefined) return this._name;
+				if (typeof _name !== 'string') throw new Error('role name string required');
+
+				this._name = _name;
+
+				return this;
+			}
+		}, {
+			key: 'active',
+			value: function active(_active) {
+
+				if (_active === undefined) return this._active;
+				if (typeof _active !== 'boolean') throw new Error('role active boolean required');
+
+				this._active = _active;
+
+				return this;
+			}
+		}, {
+			key: 'edit',
+			value: function edit(_edit2) {
+
+				if (_edit2 === undefined) return this._edit;
+				if (typeof _edit2 !== 'boolean') throw new Error('role edit boolean required');
+
+				this._edit = _edit2;
+
+				return this;
+			}
+		}, {
+			key: 'validate',
+			value: function validate() {
+
+				if (typeof this._name !== 'string') throw new Error('role name string required');
+				if (typeof this._active !== 'boolean') throw new Error('role active boolean required');
+
+				this._permissions.forEach(function (permission) {
+					return permission.validate();
+				});
+
+				return this;
+			}
+		}, {
+			key: 'valid',
+			value: function valid() {
+
+				if (typeof this._name !== 'string') return false;
+				if (typeof this._active !== 'boolean') return false;
+
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+
+				try {
+					for (var _iterator = this._permissions[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var permission = _step.value;
+
+						if (permission.valid() === false) {
+							return false;
+						}
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator.return) {
+							_iterator.return();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+
+				return true;
+			}
+		}, {
+			key: 'permissions',
+			value: function permissions() {
+				return Object.freeze(this._permissions);
+			}
+		}, {
+			key: 'toJSON',
+			value: function toJSON() {
+				return {
+					name: this._name,
+					active: this._active,
+					permissions: this._permissions
+				};
+			}
+		}]);
+
+		return Role;
+	}();
+
+	// access
+	//     .permission()
+	//     .behavior(true)
+	//     .resource('user')
+	//     .action('update')
+	//     .allow('firstName')
+	//     .deny('lastName')
+	//     .require('account', account);
+
+	// {
+	//     resource: 'user',
+	//     action: 'update',
+	//     behavior: true,
+	//     requires: {
+	//         account: 'ACCOUNT',
+	//     },
+	//     allows: [
+	//         'firstName'
+	//     ],
+	//     denies: [
+	//         'lastName'
+	//     ]
+	// };
+
+	var Access = function () {
+		function Access() {
+			_classCallCheck(this, Access);
+
+			this._roles = {};
+		}
+
+		_createClass(Access, [{
+			key: 'permission',
+			value: function permission(_permission) {
+				return new Permission(_permission);
+			}
+		}, {
+			key: 'role',
+			value: function role(_role) {
+				return new Role(_role);
+			}
+		}, {
+			key: 'get',
+			value: function get(role) {
+
+				if (role instanceof Role === false) throw new Error('access get requires role');
+
+				var name = role.name();
+
+				return this._roles[name];
+			}
+		}, {
+			key: 'add',
+			value: function add(role) {
+
+				if (role instanceof Role === false) throw new Error('access add requires role');
+
+				var name = role.name();
+				var exists = name in this._roles;
+				if (exists) throw new Error('access add role ' + name + ' exists');
+
+				this._roles[name] = role;
+
+				return this;
+			}
+		}, {
+			key: 'remove',
+			value: function remove(role) {
+
+				if (role instanceof Role === false) throw new Error('access remove requires role');
+
+				var name = role.name();
+				var exists = name in this._roles;
+				if (exists) throw new Error('access remove role ' + name + ' exists');
+
+				delete this._roles[name];
+
+				return this;
+			}
+		}, {
+			key: 'validate',
+			value: function validate(resource, action, data) {}
+		}, {
+			key: 'roles',
+			value: function roles() {
+				return Object.freeze(this._roles);
+			}
+		}, {
+			key: 'toJSON',
+			value: function toJSON() {
+				return this._roles;
+			}
+		}]);
+
+		return Access;
+	}();
 
 	var Cyrup = {
 
@@ -60,10 +489,17 @@ var _async = function () {
 		HASH: 'sha-512',
 		ALGORITHM: 'aes-256-gcm',
 
-		random: _async(function (size) {
-			var _this = this;
+		Role: Role,
+		Access: Access,
+		Permission: Permission,
+		role: Role,
+		access: Access,
+		permission: Permission,
 
-			var self = _this;
+		random: _async(function (size) {
+			var _this3 = this;
+
+			var self = _this3;
 
 			size = size || self.RANDOM;
 
@@ -72,9 +508,9 @@ var _async = function () {
 			});
 		}),
 		hash: _async(function (item, type) {
-			var _this2 = this;
+			var _this4 = this;
 
-			var self = _this2;
+			var self = _this4;
 
 			if (!item) throw new Error('Cyrup.hash - item argument required');
 
@@ -87,9 +523,9 @@ var _async = function () {
 			});
 		}),
 		compare: _async(function (password, key) {
-			var _this3 = this;
+			var _this5 = this;
 
-			var self = _this3;
+			var self = _this5;
 
 			if (!key) throw new Error('Cyrup.compare - key argument required');
 			if (!password) throw new Error('Cyrup.compare - password argument required');
@@ -102,9 +538,9 @@ var _async = function () {
 			});
 		}),
 		key: _async(function (item, data) {
-			var _this4 = this;
+			var _this6 = this;
 
-			var self = _this4;
+			var self = _this6;
 
 			if (!item) throw new Error('Cyrup.key - item argument required');
 
@@ -114,16 +550,16 @@ var _async = function () {
 			data.iterations = data.iterations || self.ITERATIONS;
 			data.hash = self.normalizeHash(data.hash || self.HASH);
 
-			return _await(Promise.all([typeof item === 'string' ? self.stringToBuffer(item) : item, typeof data.salt === 'string' ? self.stringToBuffer(data.salt) : typeof data.salt === 'number' ? self.randomBytes(data.salt) : data.salt]), function (_ref) {
-				var _ref2 = _slicedToArray(_ref, 2),
-				    bItem = _ref2[0],
-				    bSalt = _ref2[1];
+			return _await(Promise.all([typeof item === 'string' ? self.stringToBuffer(item) : item, typeof data.salt === 'string' ? self.stringToBuffer(data.salt) : typeof data.salt === 'number' ? self.randomBytes(data.salt) : data.salt]), function (_ref4) {
+				var _ref5 = _slicedToArray(_ref4, 2),
+				    bItem = _ref5[0],
+				    bSalt = _ref5[1];
 
 				return _await(self.pbkdf2(bItem, bSalt, data.iterations, data.size, data.hash), function (bKey) {
-					return _await(Promise.all([self.bufferToHex(bKey), self.bufferToHex(bSalt)]), function (_ref3) {
-						var _ref4 = _slicedToArray(_ref3, 2),
-						    hKey = _ref4[0],
-						    hSalt = _ref4[1];
+					return _await(Promise.all([self.bufferToHex(bKey), self.bufferToHex(bSalt)]), function (_ref6) {
+						var _ref7 = _slicedToArray(_ref6, 2),
+						    hKey = _ref7[0],
+						    hSalt = _ref7[1];
 
 						return hKey + ':' + hSalt;
 					});
@@ -131,9 +567,9 @@ var _async = function () {
 			});
 		}),
 		encrypt: _async(function (data, key, algorithm, vector) {
-			var _this5 = this;
+			var _this7 = this;
 
-			var self = _this5;
+			var self = _this7;
 
 			if (!key) throw new Error('Cyrup.encrypt - key argument required');
 			if (!data) throw new Error('Cyrup.encrypt - data argument required');
@@ -142,17 +578,17 @@ var _async = function () {
 			vector = vector || self.VECTOR;
 			algorithm = self.normalizeAlgorithm(algorithm || self.ALGORITHM);
 
-			return _await(Promise.all([self.hexToBuffer(key[0]), typeof data === 'string' ? self.stringToBuffer(data) : data, typeof vector === 'string' ? self.stringToBuffer(vector) : self.randomBytes(vector)]), function (_ref5) {
-				var _ref6 = _slicedToArray(_ref5, 3),
-				    bKey = _ref6[0],
-				    bData = _ref6[1],
-				    bVector = _ref6[2];
+			return _await(Promise.all([self.hexToBuffer(key[0]), typeof data === 'string' ? self.stringToBuffer(data) : data, typeof vector === 'string' ? self.stringToBuffer(vector) : self.randomBytes(vector)]), function (_ref8) {
+				var _ref9 = _slicedToArray(_ref8, 3),
+				    bKey = _ref9[0],
+				    bData = _ref9[1],
+				    bVector = _ref9[2];
 
 				return _await(self.cipher(algorithm, bKey, bVector, bData), function (bEncrypted) {
-					return _await(Promise.all([self.bufferToHex(bEncrypted), self.bufferToHex(bVector)]), function (_ref7) {
-						var _ref8 = _slicedToArray(_ref7, 2),
-						    hEncrypted = _ref8[0],
-						    hVector = _ref8[1];
+					return _await(Promise.all([self.bufferToHex(bEncrypted), self.bufferToHex(bVector)]), function (_ref10) {
+						var _ref11 = _slicedToArray(_ref10, 2),
+						    hEncrypted = _ref11[0],
+						    hVector = _ref11[1];
 
 						return hEncrypted + ':' + hVector;
 					});
@@ -160,9 +596,9 @@ var _async = function () {
 			});
 		}),
 		decrypt: _async(function (data, key, algorithm) {
-			var _this6 = this;
+			var _this8 = this;
 
-			var self = _this6;
+			var self = _this8;
 
 			if (!key) throw new Error('Cyrup.decrypt - key argument required');
 			if (!data) throw new Error('Cyrup.decrypt - data argument required');
@@ -172,11 +608,11 @@ var _async = function () {
 			key = key.split(':');
 			data = data.split(':');
 
-			return _await(Promise.all([self.hexToBuffer(key[0]), self.hexToBuffer(data[0]), self.hexToBuffer(data[1])]), function (_ref9) {
-				var _ref10 = _slicedToArray(_ref9, 3),
-				    bKey = _ref10[0],
-				    bData = _ref10[1],
-				    bVector = _ref10[2];
+			return _await(Promise.all([self.hexToBuffer(key[0]), self.hexToBuffer(data[0]), self.hexToBuffer(data[1])]), function (_ref12) {
+				var _ref13 = _slicedToArray(_ref12, 3),
+				    bKey = _ref13[0],
+				    bData = _ref13[1],
+				    bVector = _ref13[2];
 
 				return _await(self.decipher(algorithm, bKey, bVector, bData), function (bDecrypted) {
 					return _await(self.bufferToString(bDecrypted));
@@ -235,9 +671,9 @@ var _async = function () {
 		});
 
 		Cyrup.decipher = _async(function (algorithm, key, vector, data) {
-			var _this7 = this;
+			var _this9 = this;
 
-			var self = _this7;
+			var self = _this9;
 			var buffer = Buffer.from(data, 'hex');
 			var tag = buffer.slice(buffer.byteLength - self.TAG);
 			var text = buffer.slice(0, buffer.byteLength - self.TAG);
@@ -337,9 +773,9 @@ var _async = function () {
 		});
 
 		Cyrup.cipher = _async(function (algorithm, key, vector, data) {
-			var _this8 = this;
+			var _this10 = this;
 
-			var self = _this8;
+			var self = _this10;
 
 			return _await(window.crypto.subtle.importKey('raw', key, {
 				name: algorithm
@@ -353,9 +789,9 @@ var _async = function () {
 		});
 
 		Cyrup.decipher = _async(function (algorithm, key, vector, data) {
-			var _this9 = this;
+			var _this11 = this;
 
-			var self = _this9;
+			var self = _this11;
 
 			return _await(window.crypto.subtle.importKey('raw', key, {
 				name: algorithm

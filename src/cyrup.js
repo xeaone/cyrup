@@ -1,3 +1,6 @@
+import Role from './role.js';
+import Access from './access.js';
+import Permission from './permission.js';
 
 const Cyrup = {
 
@@ -11,6 +14,13 @@ const Cyrup = {
     RANDOM: 20,
     HASH: 'sha-512',
     ALGORITHM: 'aes-256-gcm',
+
+    Role,
+    Access,
+    Permission,
+    role: Role,
+    access: Access,
+    permission: Permission,
 
     async random (size) {
         const self = this;
