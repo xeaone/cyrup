@@ -57,7 +57,7 @@ export default class Permission {
     }
 
     behavior (behavior) {
-        
+
         if (behavior === undefined) return this._behavior;
         if (typeof behavior !== 'boolean') throw new Error('permission behavior boolean required');
 
@@ -66,9 +66,12 @@ export default class Permission {
         return this;
     }
 
+    allows () {
+        return Object.freeze(this._allows);
+    }
+
     allow (allow) {
 
-        if (allow === undefined) return this._allows;
         if (typeof allow !== 'string') throw new Error('permission allow string required');
 
         const exists = this._allows.includes(allow);
@@ -79,9 +82,12 @@ export default class Permission {
         return this;
     }
 
+    denies () {
+        return Object.freeze(this._deniess);
+    }
+
     deny (deny) {
 
-        if (deny === undefined) return this._denies;
         if (typeof deny !== 'string') throw new Error('permission deny string required');
 
         const exists = this._denies.includes(deny);
@@ -92,9 +98,12 @@ export default class Permission {
         return this;
     }
 
+    requires () {
+        return Object.freeze(this._requires);
+    }
+
     require (name, value) {
 
-        if (name === undefined && value === undefined) return this._requires;
         if (typeof name !== 'string') throw new Error('permission name string required');
         if (typeof value !== 'string') throw new Error('permission value string required');
 
@@ -113,13 +122,52 @@ export default class Permission {
         return this;
     }
 
-    validate () {
+    validate (resource, action, data) {
 
-        if (typeof this._action !== 'string') throw new Error('permission action required');
-        if (typeof this._resource !== 'string') throw new Error('permission resource required');
-        if (typeof this._behavior !== 'boolean') throw new Error('permission behavior required');
+        if (typeof data !== 'object') return false;
+        if (typeof action !== 'string') return false;
+        if (typeof resource !== 'string') return false;
 
-        return this;
+        if (this._action !== action) return false;
+        if (this._resource !== resource) return false;
+
+        for (const name in this._requires) {
+            if (name in data) {
+                if (this._requires[value] === data[name]) {
+                    continue;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        if (this._behavior) {
+            for (const name of this._denies) {
+                if (name in data) {
+                    return false;
+                } else {
+                    continue
+                }
+            }
+        } else {
+            for (const name of this._allows) {
+                if (name in data) {
+                    return false;
+                } else {
+                    continue
+                }
+            }
+        }
+
+        // if (typeof this._action !== 'string') throw new Error('permission action required');
+        // if (typeof this._resource !== 'string') throw new Error('permission resource required');
+        // if (typeof this._behavior !== 'boolean') throw new Error('permission behavior required');
+        //
+        // return this;
+        
+        return true;
     }
 
     valid () {

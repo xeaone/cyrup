@@ -69,14 +69,25 @@ export default class Role {
         return this;
     }
 
-    validate () {
+    validate (resource, action, data) {
 
-        if (typeof this._name !== 'string') throw new Error('role name string required');
-        if (typeof this._active !== 'boolean') throw new Error('role active boolean required');
+        const permissions = this._permissions;
+        for (const permission of permissions) {
+            if (permission.validate(resource, action, data)) {
+                continue;
+            } else {
+                return false;
+            }
+        }
 
-        this._permissions.forEach(permission => permission.validate());
-
-        return this;
+        // if (typeof this._name !== 'string') throw new Error('role name string required');
+        // if (typeof this._active !== 'boolean') throw new Error('role active boolean required');
+        //
+        // this._permissions.forEach(permission => permission.validate());
+        //
+        // return this;
+        
+        return true;
     }
 
     valid () {
