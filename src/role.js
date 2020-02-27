@@ -71,6 +71,12 @@ export default class Role {
 
     validate (resource, action, data) {
 
+        if (typeof data !== 'object') return false;
+        if (typeof action !== 'string') return false;
+        if (typeof resource !== 'string') return false;
+
+        if (this._active === false) return false;
+
         const permissions = this._permissions;
         for (const permission of permissions) {
             if (permission.validate(resource, action, data)) {
@@ -86,7 +92,7 @@ export default class Role {
         // this._permissions.forEach(permission => permission.validate());
         //
         // return this;
-        
+
         return true;
     }
 
