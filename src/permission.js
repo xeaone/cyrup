@@ -122,6 +122,13 @@ export default class Permission {
         return this;
     }
 
+    traverse (name, data) {
+        const keys = name.split('.');
+        const last = keys.pop();
+        keys.forEach(key => data = data[key]);
+        return [ last, data ];
+    }
+
     validate (resource, action, data) {
 
         if (typeof data !== 'object') return false;
@@ -132,8 +139,9 @@ export default class Permission {
         if (this._resource !== resource) return false;
 
         for (const name in this._requires) {
-            if (name in data) {
-                if (this._requires[value] === data[name]) {
+            const [ key, reference ] = this.traverse(name, data);
+            if (key in reference) {
+                if (this._requires[value] === reference[key]) {
                     continue;
                 } else {
                     return false;
@@ -145,28 +153,24 @@ export default class Permission {
 
         if (this._behavior) {
             for (const name of this._denies) {
-                if (name in data) {
+                const [ key, reference ] = this.traverse(name, data);
+                if (key in reference) {
                     return false;
                 } else {
-                    continue
+                    continue;
                 }
             }
         } else {
             for (const name of this._allows) {
-                if (name in data) {
+                const [ key, reference ] = this.traverse(name, data);
+                if (key in reference) {
                     return false;
                 } else {
-                    continue
+                    continue;
                 }
             }
         }
 
-        // if (typeof this._action !== 'string') throw new Error('permission action required');
-        // if (typeof this._resource !== 'string') throw new Error('permission resource required');
-        // if (typeof this._behavior !== 'boolean') throw new Error('permission behavior required');
-        //
-        // return this;
-        
         return true;
     }
 
