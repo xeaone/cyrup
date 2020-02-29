@@ -86,13 +86,6 @@ export default class Role {
             }
         }
 
-        // if (typeof this._name !== 'string') throw new Error('role name string required');
-        // if (typeof this._active !== 'boolean') throw new Error('role active boolean required');
-        //
-        // this._permissions.forEach(permission => permission.validate());
-        //
-        // return this;
-
         return true;
     }
 
