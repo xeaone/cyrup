@@ -29,7 +29,7 @@ export default class Role {
     add (permission) {
 
         if (permission instanceof Permission === false) throw new Error('role add requires permission');
-        if (permission.valid() === false) throw new Error('role add permission invalid');
+        // if (permission.valid() === false) throw new Error('role add permission invalid');
 
         const action = permission.action();
         const resource = permission.resource();

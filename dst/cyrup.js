@@ -1,6 +1,6 @@
 /*
     Name: cyrup
-    Version: 0.7.3
+    Version: 0.7.4
     License: MPL-2.0
     Author: Alexander Elias
     Email: alex.steven.elias@gmail.com
@@ -379,7 +379,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			value: function add(permission) {
 
 				if (permission instanceof Permission === false) throw new Error('role add requires permission');
-				if (permission.valid() === false) throw new Error('role add permission invalid');
+				// if (permission.valid() === false) throw new Error('role add permission invalid');
 
 				var action = permission.action();
 				var resource = permission.resource();
