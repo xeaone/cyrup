@@ -3,7 +3,10 @@ import Permission from './permission.js';
 export default class Role {
 
     constructor (role = {}) {
-        const { name, active, permissions } = role;
+
+        const {
+            name, active, permissions
+        } = role;
 
         this._edit = true;
         this._name = null;
@@ -20,27 +23,12 @@ export default class Role {
 
     }
 
-    permission  () {
-        const permission = new Permission(...arguments);
-        this.add(permission);
-        return permission;
-    }
+    edit (edit) {
 
-    add (permission) {
+        if (edit === undefined) return this._edit;
+        if (typeof edit !== 'boolean') throw new Error('role edit boolean required');
 
-        if (permission instanceof Permission === false) throw new Error('role add requires permission');
-        // if (permission.valid() === false) throw new Error('role add permission invalid');
-
-        const action = permission.action();
-        const resource = permission.resource();
-
-        const exists = this._permissions.find(({ _resource, _action }) => {
-            return _resource === resource && _action === action;
-        });
-
-        if (exists) throw new Error(`role add permission ${resource} ${action} exists`);
-
-        this._permissions.push(permission);
+        this._edit = edit;
 
         return this;
     }
@@ -65,12 +53,39 @@ export default class Role {
         return this;
     }
 
-    edit (edit) {
+    permissions () {
+        return Object.freeze(this._permissions);
+    }
 
-        if (edit === undefined) return this._edit;
-        if (typeof edit !== 'boolean') throw new Error('role edit boolean required');
+    permission  () {
+        const permission = new Permission(...arguments);
+        this.add(permission);
+        return permission;
+    }
 
-        this._edit = edit;
+    get (resource, action) {
+        return this._permissions.find(
+            permission =>
+            permission.action() === action &&
+            permission.resource() === resource
+        );
+    }
+
+    add (permission) {
+
+        if (permission instanceof Permission === false) throw new Error('role add requires permission');
+        // if (permission.valid() === false) throw new Error('role add permission invalid');
+
+        const action = permission.action();
+        const resource = permission.resource();
+
+        const exists = this._permissions.find(({ _resource, _action }) => {
+            return _resource === resource && _action === action;
+        });
+
+        if (exists) throw new Error(`role add permission ${resource} ${action} exists`);
+
+        this._permissions.push(permission);
 
         return this;
     }
@@ -83,16 +98,10 @@ export default class Role {
 
         if (this._active === false) return false;
 
-        const permissions = this._permissions;
-        for (const permission of permissions) {
-            if (permission.validate(resource, action, data)) {
-                continue;
-            } else {
-                return false;
-            }
-        }
+        const permission = this.get(resource, action);
+        if (!permission) return false;
 
-        return true;
+        return permission.validate(resource, action, data);
     }
 
     valid () {
@@ -109,15 +118,12 @@ export default class Role {
         return true;
     }
 
-    permissions () {
-        return Object.freeze(this._permissions);
-    }
-
     toJSON () {
         return {
+            edit: this._edit,
             name: this._name,
             active: this._active,
-            permissions: this._permissions
+            permissions: this._permissions.map(permission => permission.toJSON())
         }
     }
 

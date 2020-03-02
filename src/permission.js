@@ -2,6 +2,7 @@
 export default class Permission {
 
     constructor (permission = {}) {
+        
         const {
             allows, denies, requires,
             action, resource, behavior
@@ -34,6 +35,16 @@ export default class Permission {
             Object.entries(requires).forEach(([ name, value ]) => this.require(name, value));
         }
 
+    }
+
+    edit (edit) {
+
+        if (edit === undefined) return this._edit;
+        if (typeof edit !== 'boolean') throw new Error('permission edit boolean required');
+
+        this._edit = edit;
+
+        return this;
     }
 
     action (action) {
@@ -112,16 +123,6 @@ export default class Permission {
         return this;
     }
 
-    edit (edit) {
-
-        if (edit === undefined) return this._edit;
-        if (typeof edit !== 'boolean') throw new Error('permission edit boolean required');
-
-        this._edit = edit;
-
-        return this;
-    }
-
     traverse (name, data) {
         const keys = name.split('.');
         const last = keys.pop();
@@ -185,6 +186,7 @@ export default class Permission {
 
     toJSON () {
         return {
+            edit: this._edit,
             action: this._action,
             resource: this._resource,
             behavior: this._behavior,

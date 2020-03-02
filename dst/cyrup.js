@@ -1,6 +1,6 @@
 /*
     Name: cyrup
-    Version: 0.7.4
+    Version: 0.7.7
     License: MPL-2.0
     Author: Alexander Elias
     Email: alex.steven.elias@gmail.com
@@ -32,9 +32,7 @@ var _async = function () {
 		return function () {
 			var args = [];for (var i = 0; i < arguments.length; i++) {
 				args[i] = arguments[i];
-			}
-
-			try {
+			}try {
 				return Promise.resolve(f.apply(this, args));
 			} catch (e) {
 				return Promise.reject(e);
@@ -44,7 +42,9 @@ var _async = function () {
 }();function _await(value, then, direct) {
 	if (direct) {
 		return then ? then(value) : value;
-	}value = Promise.resolve(value);return then ? value.then(then) : value;
+	}value = Promise.resolve(value);
+
+	return then ? value.then(then) : value;
 }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -108,6 +108,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}
 
 		_createClass(Permission, [{
+			key: 'edit',
+			value: function edit(_edit) {
+
+				if (_edit === undefined) return this._edit;
+				if (typeof _edit !== 'boolean') throw new Error('permission edit boolean required');
+
+				this._edit = _edit;
+
+				return this;
+			}
+		}, {
 			key: 'action',
 			value: function action(_action2) {
 
@@ -122,8 +133,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			key: 'resource',
 			value: function resource(_resource2) {
 
-				if (_resource2 === undefined) return this._resource;
-				if (typeof _resource2 !== 'string') throw new Error('permission resource string required');
+				if (_resource2 === undefined) return this._resource;if (typeof _resource2 !== 'string') throw new Error('permission resource string required');
 
 				this._resource = _resource2;
 
@@ -134,7 +144,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			value: function behavior(_behavior) {
 
 				if (_behavior === undefined) return this._behavior;
-				if (typeof _behavior !== 'boolean') throw new Error('permission behavior boolean required');this._behavior = _behavior;
+				if (typeof _behavior !== 'boolean') throw new Error('permission behavior boolean required');
+
+				this._behavior = _behavior;
 
 				return this;
 			}
@@ -146,7 +158,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'allow',
 			value: function allow(_allow) {
-
 				if (typeof _allow !== 'string') throw new Error('permission allow string required');
 
 				var exists = this._allows.includes(_allow);
@@ -187,17 +198,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				if (typeof value !== 'string') throw new Error('permission value string required');
 
 				this._requires[name] = value;
-
-				return this;
-			}
-		}, {
-			key: 'edit',
-			value: function edit(_edit) {
-
-				if (_edit === undefined) return this._edit;
-				if (typeof _edit !== 'boolean') throw new Error('permission edit boolean required');
-
-				this._edit = _edit;
 
 				return this;
 			}
@@ -325,6 +325,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			key: 'toJSON',
 			value: function toJSON() {
 				return {
+					edit: this._edit,
 					action: this._action,
 					resource: this._resource,
 					behavior: this._behavior,
@@ -368,32 +369,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}
 
 		_createClass(Role, [{
-			key: 'permission',
-			value: function permission() {
-				var permission = new (Function.prototype.bind.apply(Permission, [null].concat(Array.prototype.slice.call(arguments))))();
-				this.add(permission);
-				return permission;
-			}
-		}, {
-			key: 'add',
-			value: function add(permission) {
+			key: 'edit',
+			value: function edit(_edit2) {
 
-				if (permission instanceof Permission === false) throw new Error('role add requires permission');
-				// if (permission.valid() === false) throw new Error('role add permission invalid');
+				if (_edit2 === undefined) return this._edit;
+				if (typeof _edit2 !== 'boolean') throw new Error('role edit boolean required');
 
-				var action = permission.action();
-				var resource = permission.resource();
-
-				var exists = this._permissions.find(function (_ref3) {
-					var _resource = _ref3._resource,
-					    _action = _ref3._action;
-
-					return _resource === resource && _action === action;
-				});
-
-				if (exists) throw new Error('role add permission ' + resource + ' ' + action + ' exists');
-
-				this._permissions.push(permission);
+				this._edit = _edit2;
 
 				return this;
 			}
@@ -420,13 +402,44 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				return this;
 			}
 		}, {
-			key: 'edit',
-			value: function edit(_edit2) {
+			key: 'permissions',
+			value: function permissions() {
+				return Object.freeze(this._permissions);
+			}
+		}, {
+			key: 'permission',
+			value: function permission() {
+				var permission = new (Function.prototype.bind.apply(Permission, [null].concat(Array.prototype.slice.call(arguments))))();
+				this.add(permission);
+				return permission;
+			}
+		}, {
+			key: 'get',
+			value: function get(resource, action) {
+				return this._permissions.find(function (permission) {
+					return permission.action() === action && permission.resource() === resource;
+				});
+			}
+		}, {
+			key: 'add',
+			value: function add(permission) {
 
-				if (_edit2 === undefined) return this._edit;
-				if (typeof _edit2 !== 'boolean') throw new Error('role edit boolean required');
+				if (permission instanceof Permission === false) throw new Error('role add requires permission');
+				// if (permission.valid() === false) throw new Error('role add permission invalid');
 
-				this._edit = _edit2;
+				var action = permission.action();
+				var resource = permission.resource();
+
+				var exists = this._permissions.find(function (_ref3) {
+					var _resource = _ref3._resource,
+					    _action = _ref3._action;
+
+					return _resource === resource && _action === action;
+				});
+
+				if (exists) throw new Error('role add permission ' + resource + ' ' + action + ' exists');
+
+				this._permissions.push(permission);
 
 				return this;
 			}
@@ -440,18 +453,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 				if (this._active === false) return false;
 
-				var permissions = this._permissions;
+				var permission = this.get(resource, action);
+				if (!permission) return false;
+
+				return permission.validate(resource, action, data);
+			}
+		}, {
+			key: 'valid',
+			value: function valid() {
+
+				if (typeof this._name !== 'string') return false;
+				if (typeof this._active !== 'boolean') return false;
+
 				var _iteratorNormalCompletion3 = true;
 				var _didIteratorError3 = false;
 				var _iteratorError3 = undefined;
 
 				try {
-					for (var _iterator3 = permissions[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+					for (var _iterator3 = this._permissions[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
 						var permission = _step3.value;
 
-						if (permission.validate(resource, action, data)) {
-							continue;
-						} else {
+						if (permission.valid() === false) {
 							return false;
 						}
 					}
@@ -473,53 +495,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				return true;
 			}
 		}, {
-			key: 'valid',
-			value: function valid() {
-
-				if (typeof this._name !== 'string') return false;
-				if (typeof this._active !== 'boolean') return false;
-
-				var _iteratorNormalCompletion4 = true;
-				var _didIteratorError4 = false;
-				var _iteratorError4 = undefined;
-
-				try {
-					for (var _iterator4 = this._permissions[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-						var permission = _step4.value;
-
-						if (permission.valid() === false) {
-							return false;
-						}
-					}
-				} catch (err) {
-					_didIteratorError4 = true;
-					_iteratorError4 = err;
-				} finally {
-					try {
-						if (!_iteratorNormalCompletion4 && _iterator4.return) {
-							_iterator4.return();
-						}
-					} finally {
-						if (_didIteratorError4) {
-							throw _iteratorError4;
-						}
-					}
-				}
-
-				return true;
-			}
-		}, {
-			key: 'permissions',
-			value: function permissions() {
-				return Object.freeze(this._permissions);
-			}
-		}, {
 			key: 'toJSON',
 			value: function toJSON() {
 				return {
+					edit: this._edit,
 					name: this._name,
 					active: this._active,
-					permissions: this._permissions
+					permissions: this._permissions.map(function (permission) {
+						return permission.toJSON();
+					})
 				};
 			}
 		}]);
