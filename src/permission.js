@@ -141,7 +141,7 @@ export default class Permission {
         for (const name in this._requires) {
             const [ key, reference ] = this.traverse(name, data);
             if (key in reference) {
-                if (this._requires[value] === reference[key]) {
+                if (this._requires[key] === reference[key]) {
                     continue;
                 } else {
                     return false;

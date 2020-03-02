@@ -1,6 +1,6 @@
 /*
     Name: cyrup
-    Version: 0.7.1
+    Version: 0.7.3
     License: MPL-2.0
     Author: Alexander Elias
     Email: alex.steven.elias@gmail.com
@@ -32,7 +32,9 @@ var _async = function () {
 		return function () {
 			var args = [];for (var i = 0; i < arguments.length; i++) {
 				args[i] = arguments[i];
-			}try {
+			}
+
+			try {
 				return Promise.resolve(f.apply(this, args));
 			} catch (e) {
 				return Promise.reject(e);
@@ -132,17 +134,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			value: function behavior(_behavior) {
 
 				if (_behavior === undefined) return this._behavior;
-				if (typeof _behavior !== 'boolean') throw new Error('permission behavior boolean required');
-
-				this._behavior = _behavior;
+				if (typeof _behavior !== 'boolean') throw new Error('permission behavior boolean required');this._behavior = _behavior;
 
 				return this;
+			}
+		}, {
+			key: 'allows',
+			value: function allows() {
+				return Object.freeze(this._allows);
 			}
 		}, {
 			key: 'allow',
 			value: function allow(_allow) {
 
-				if (_allow === undefined) return this._allows;
 				if (typeof _allow !== 'string') throw new Error('permission allow string required');
 
 				var exists = this._allows.includes(_allow);
@@ -153,10 +157,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				return this;
 			}
 		}, {
+			key: 'denies',
+			value: function denies() {
+				return Object.freeze(this._deniess);
+			}
+		}, {
 			key: 'deny',
 			value: function deny(_deny) {
 
-				if (_deny === undefined) return this._denies;
 				if (typeof _deny !== 'string') throw new Error('permission deny string required');
 
 				var exists = this._denies.includes(_deny);
@@ -167,10 +175,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				return this;
 			}
 		}, {
+			key: 'requires',
+			value: function requires() {
+				return Object.freeze(this._requires);
+			}
+		}, {
 			key: 'require',
 			value: function require(name, value) {
 
-				if (name === undefined && value === undefined) return this._requires;
 				if (typeof name !== 'string') throw new Error('permission name string required');
 				if (typeof value !== 'string') throw new Error('permission value string required');
 
@@ -190,14 +202,114 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				return this;
 			}
 		}, {
+			key: 'traverse',
+			value: function traverse(name, data) {
+				var keys = name.split('.');
+				var last = keys.pop();
+				keys.forEach(function (key) {
+					return data = data[key];
+				});
+				return [last, data];
+			}
+		}, {
 			key: 'validate',
-			value: function validate() {
+			value: function validate(resource, action, data) {
 
-				if (typeof this._action !== 'string') throw new Error('permission action required');
-				if (typeof this._resource !== 'string') throw new Error('permission resource required');
-				if (typeof this._behavior !== 'boolean') throw new Error('permission behavior required');
+				if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) !== 'object') return false;
+				if (typeof action !== 'string') return false;
+				if (typeof resource !== 'string') return false;
 
-				return this;
+				if (this._action !== action) return false;
+				if (this._resource !== resource) return false;
+
+				for (var name in this._requires) {
+					var _traverse = this.traverse(name, data),
+					    _traverse2 = _slicedToArray(_traverse, 2),
+					    key = _traverse2[0],
+					    reference = _traverse2[1];
+
+					if (key in reference) {
+						if (this._requires[key] === reference[key]) {
+							continue;
+						} else {
+							return false;
+						}
+					} else {
+						return false;
+					}
+				}
+
+				if (this._behavior) {
+					var _iteratorNormalCompletion = true;
+					var _didIteratorError = false;
+					var _iteratorError = undefined;
+
+					try {
+						for (var _iterator = this._denies[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+							var _name = _step.value;
+
+							var _traverse3 = this.traverse(_name, data),
+							    _traverse4 = _slicedToArray(_traverse3, 2),
+							    _key = _traverse4[0],
+							    _reference = _traverse4[1];
+
+							if (_key in _reference) {
+								return false;
+							} else {
+								continue;
+							}
+						}
+					} catch (err) {
+						_didIteratorError = true;
+						_iteratorError = err;
+					} finally {
+						try {
+							if (!_iteratorNormalCompletion && _iterator.return) {
+								_iterator.return();
+							}
+						} finally {
+							if (_didIteratorError) {
+								throw _iteratorError;
+							}
+						}
+					}
+				} else {
+					var _iteratorNormalCompletion2 = true;
+					var _didIteratorError2 = false;
+					var _iteratorError2 = undefined;
+
+					try {
+						for (var _iterator2 = this._allows[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+							var _name2 = _step2.value;
+
+							var _traverse5 = this.traverse(_name2, data),
+							    _traverse6 = _slicedToArray(_traverse5, 2),
+							    _key2 = _traverse6[0],
+							    _reference2 = _traverse6[1];
+
+							if (_key2 in _reference2) {
+								return false;
+							} else {
+								continue;
+							}
+						}
+					} catch (err) {
+						_didIteratorError2 = true;
+						_iteratorError2 = err;
+					} finally {
+						try {
+							if (!_iteratorNormalCompletion2 && _iterator2.return) {
+								_iterator2.return();
+							}
+						} finally {
+							if (_didIteratorError2) {
+								throw _iteratorError2;
+							}
+						}
+					}
+				}
+
+				return true;
 			}
 		}, {
 			key: 'valid',
@@ -250,12 +362,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			if ('permissions' in role) {
 				if (permissions instanceof Array === false) throw new Error('role permissions illegal type');
 				permissions.forEach(function (permission) {
-					return _this2.add(permission);
+					return _this2.permission(permission);
 				});
 			}
 		}
 
 		_createClass(Role, [{
+			key: 'permission',
+			value: function permission() {
+				var permission = new (Function.prototype.bind.apply(Permission, [null].concat(Array.prototype.slice.call(arguments))))();
+				this.add(permission);
+				return permission;
+			}
+		}, {
 			key: 'add',
 			value: function add(permission) {
 
@@ -280,12 +399,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 		}, {
 			key: 'name',
-			value: function name(_name) {
+			value: function name(_name3) {
 
-				if (_name === undefined) return this._name;
-				if (typeof _name !== 'string') throw new Error('role name string required');
+				if (_name3 === undefined) return this._name;
+				if (typeof _name3 !== 'string') throw new Error('role name string required');
 
-				this._name = _name;
+				this._name = _name3;
 
 				return this;
 			}
@@ -313,16 +432,45 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 		}, {
 			key: 'validate',
-			value: function validate() {
+			value: function validate(resource, action, data) {
 
-				if (typeof this._name !== 'string') throw new Error('role name string required');
-				if (typeof this._active !== 'boolean') throw new Error('role active boolean required');
+				if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) !== 'object') return false;
+				if (typeof action !== 'string') return false;
+				if (typeof resource !== 'string') return false;
 
-				this._permissions.forEach(function (permission) {
-					return permission.validate();
-				});
+				if (this._active === false) return false;
 
-				return this;
+				var permissions = this._permissions;
+				var _iteratorNormalCompletion3 = true;
+				var _didIteratorError3 = false;
+				var _iteratorError3 = undefined;
+
+				try {
+					for (var _iterator3 = permissions[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+						var permission = _step3.value;
+
+						if (permission.validate(resource, action, data)) {
+							continue;
+						} else {
+							return false;
+						}
+					}
+				} catch (err) {
+					_didIteratorError3 = true;
+					_iteratorError3 = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion3 && _iterator3.return) {
+							_iterator3.return();
+						}
+					} finally {
+						if (_didIteratorError3) {
+							throw _iteratorError3;
+						}
+					}
+				}
+
+				return true;
 			}
 		}, {
 			key: 'valid',
@@ -331,29 +479,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				if (typeof this._name !== 'string') return false;
 				if (typeof this._active !== 'boolean') return false;
 
-				var _iteratorNormalCompletion = true;
-				var _didIteratorError = false;
-				var _iteratorError = undefined;
+				var _iteratorNormalCompletion4 = true;
+				var _didIteratorError4 = false;
+				var _iteratorError4 = undefined;
 
 				try {
-					for (var _iterator = this._permissions[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-						var permission = _step.value;
+					for (var _iterator4 = this._permissions[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+						var permission = _step4.value;
 
 						if (permission.valid() === false) {
 							return false;
 						}
 					}
 				} catch (err) {
-					_didIteratorError = true;
-					_iteratorError = err;
+					_didIteratorError4 = true;
+					_iteratorError4 = err;
 				} finally {
 					try {
-						if (!_iteratorNormalCompletion && _iterator.return) {
-							_iterator.return();
+						if (!_iteratorNormalCompletion4 && _iterator4.return) {
+							_iterator4.return();
 						}
 					} finally {
-						if (_didIteratorError) {
-							throw _iteratorError;
+						if (_didIteratorError4) {
+							throw _iteratorError4;
 						}
 					}
 				}
@@ -379,15 +527,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		return Role;
 	}();
 
-	// access
-	//     .permission()
-	//     .behavior(true)
-	//     .resource('user')
-	//     .action('update')
-	//     .allow('firstName')
-	//     .deny('lastName')
-	//     .require('account', account);
-
 	// {
 	//     resource: 'user',
 	//     action: 'update',
@@ -405,20 +544,31 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 	var Access = function () {
 		function Access() {
+			var _this3 = this;
+
+			var access = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
 			_classCallCheck(this, Access);
 
+			var roles = access.roles;
+
+
 			this._roles = {};
+
+			if ('roles' in access) {
+				if (roles instanceof Array === false) throw new Error('access roles illegal type');
+				roles.forEach(function (role) {
+					return _this3.role(role);
+				});
+			}
 		}
 
 		_createClass(Access, [{
-			key: 'permission',
-			value: function permission(_permission) {
-				return new Permission(_permission);
-			}
-		}, {
 			key: 'role',
-			value: function role(_role) {
-				return new Role(_role);
+			value: function role() {
+				var role = new (Function.prototype.bind.apply(Role, [null].concat(Array.prototype.slice.call(arguments))))();
+				this.add(role);
+				return role;
 			}
 		}, {
 			key: 'get',
@@ -458,9 +608,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 				return this;
 			}
-		}, {
-			key: 'validate',
-			value: function validate(resource, action, data) {}
 		}, {
 			key: 'roles',
 			value: function roles() {
@@ -503,9 +650,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			return new (Function.prototype.bind.apply(Permission, [null].concat(Array.prototype.slice.call(arguments))))();
 		},
 		random: _async(function (size) {
-			var _this3 = this;
+			var _this4 = this;
 
-			var self = _this3;
+			var self = _this4;
 
 			size = size || self.RANDOM;
 
@@ -514,9 +661,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			});
 		}),
 		hash: _async(function (item, type) {
-			var _this4 = this;
+			var _this5 = this;
 
-			var self = _this4;
+			var self = _this5;
 
 			if (!item) throw new Error('Cyrup.hash - item argument required');
 
@@ -529,9 +676,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			});
 		}),
 		compare: _async(function (password, key) {
-			var _this5 = this;
+			var _this6 = this;
 
-			var self = _this5;
+			var self = _this6;
 
 			if (!key) throw new Error('Cyrup.compare - key argument required');
 			if (!password) throw new Error('Cyrup.compare - password argument required');
@@ -544,9 +691,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			});
 		}),
 		key: _async(function (item, data) {
-			var _this6 = this;
+			var _this7 = this;
 
-			var self = _this6;
+			var self = _this7;
 
 			if (!item) throw new Error('Cyrup.key - item argument required');
 
@@ -573,9 +720,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			});
 		}),
 		encrypt: _async(function (data, key, algorithm, vector) {
-			var _this7 = this;
+			var _this8 = this;
 
-			var self = _this7;
+			var self = _this8;
 
 			if (!key) throw new Error('Cyrup.encrypt - key argument required');
 			if (!data) throw new Error('Cyrup.encrypt - data argument required');
@@ -602,9 +749,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			});
 		}),
 		decrypt: _async(function (data, key, algorithm) {
-			var _this8 = this;
+			var _this9 = this;
 
-			var self = _this8;
+			var self = _this9;
 
 			if (!key) throw new Error('Cyrup.decrypt - key argument required');
 			if (!data) throw new Error('Cyrup.decrypt - data argument required');
@@ -677,9 +824,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		});
 
 		Cyrup.decipher = _async(function (algorithm, key, vector, data) {
-			var _this9 = this;
+			var _this10 = this;
 
-			var self = _this9;
+			var self = _this10;
 			var buffer = Buffer.from(data, 'hex');
 			var tag = buffer.slice(buffer.byteLength - self.TAG);
 			var text = buffer.slice(0, buffer.byteLength - self.TAG);
@@ -779,9 +926,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		});
 
 		Cyrup.cipher = _async(function (algorithm, key, vector, data) {
-			var _this10 = this;
+			var _this11 = this;
 
-			var self = _this10;
+			var self = _this11;
 
 			return _await(window.crypto.subtle.importKey('raw', key, {
 				name: algorithm
@@ -795,9 +942,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		});
 
 		Cyrup.decipher = _async(function (algorithm, key, vector, data) {
-			var _this11 = this;
+			var _this12 = this;
 
-			var self = _this11;
+			var self = _this12;
 
 			return _await(window.crypto.subtle.importKey('raw', key, {
 				name: algorithm

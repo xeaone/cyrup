@@ -15,9 +15,15 @@ export default class Role {
 
         if ('permissions' in role) {
             if (permissions instanceof Array === false) throw new Error('role permissions illegal type');
-            permissions.forEach(permission => this.add(permission));
+            permissions.forEach(permission => this.permission(permission));
         }
 
+    }
+
+    permission  () {
+        const permission = new Permission(...arguments);
+        this.add(permission);
+        return permission;
     }
 
     add (permission) {

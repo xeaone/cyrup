@@ -1,14 +1,4 @@
 import Role from './role.js';
-import Permission from './permission.js';
-
-// access
-//     .permission()
-//     .behavior(true)
-//     .resource('user')
-//     .action('update')
-//     .allow('firstName')
-//     .deny('lastName')
-//     .require('account', account);
 
 // {
 //     resource: 'user',
@@ -27,16 +17,22 @@ import Permission from './permission.js';
 
 export default class Access {
 
-    constructor () {
+    constructor (access = {}) {
+        const { roles } = access;
+
         this._roles = {};
+
+        if ('roles' in access) {
+            if (roles instanceof Array === false) throw new Error('access roles illegal type');
+            roles.forEach(role => this.role(role));
+        }
+
     }
 
-    permission (permission) {
-        return new Permission(permission);
-    }
-
-    role (role) {
-        return new Role(role);
+    role () {
+        const role = new Role(...arguments);
+        this.add(role);
+        return role;
     }
 
     get (role) {
@@ -72,10 +68,6 @@ export default class Access {
         delete this._roles[name];
 
         return this;
-    }
-
-    validate (resource, action, data) {
-
     }
 
     roles () {

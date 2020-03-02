@@ -1,6 +1,6 @@
 {
     "name": "cyrup",
-    "version": "0.7.1",
+    "version": "0.7.3",
     "description": "Crypto Library For Node & Browsers",
     "main": "dst/cyrup.js",
     "scripts": {
