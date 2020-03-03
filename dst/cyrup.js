@@ -1,6 +1,6 @@
 /*
     Name: cyrup
-    Version: 0.7.7
+    Version: 0.7.8
     License: MPL-2.0
     Author: Alexander Elias
     Email: alex.steven.elias@gmail.com
@@ -17,6 +17,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 var _async = function () {
 	try {
 		if (isNaN.apply(null, {})) {
+
 			return function (f) {
 				return function () {
 					try {
@@ -121,19 +122,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'action',
 			value: function action(_action2) {
-
 				if (_action2 === undefined) return this._action;
 				if (typeof _action2 !== 'string') throw new Error('permission action string required');
 
-				this._action = _action2;
-
-				return this;
+				this._action = _action2;return this;
 			}
 		}, {
 			key: 'resource',
 			value: function resource(_resource2) {
 
-				if (_resource2 === undefined) return this._resource;if (typeof _resource2 !== 'string') throw new Error('permission resource string required');
+				if (_resource2 === undefined) return this._resource;
+				if (typeof _resource2 !== 'string') throw new Error('permission resource string required');
 
 				this._resource = _resource2;
 
@@ -195,7 +194,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			value: function require(name, value) {
 
 				if (typeof name !== 'string') throw new Error('permission name string required');
-				if (typeof value !== 'string') throw new Error('permission value string required');
+
+				if (!(typeof value !== 'boolean' || typeof value !== 'number' || typeof value !== 'string' || value instanceof Array)) throw new Error('permission value string or array required');
 
 				this._requires[name] = value;
 
@@ -228,8 +228,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					    key = _traverse2[0],
 					    reference = _traverse2[1];
 
+					var internal = this._requires[key];
+					var external = reference[key];
 					if (key in reference) {
-						if (this._requires[key] === reference[key]) {
+						if (internal instanceof Array && internal.includes(external) || internal === external) {
 							continue;
 						} else {
 							return false;

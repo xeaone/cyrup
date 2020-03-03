@@ -2,7 +2,7 @@
 export default class Permission {
 
     constructor (permission = {}) {
-        
+
         const {
             allows, denies, requires,
             action, resource, behavior
@@ -116,7 +116,13 @@ export default class Permission {
     require (name, value) {
 
         if (typeof name !== 'string') throw new Error('permission name string required');
-        if (typeof value !== 'string') throw new Error('permission value string required');
+
+        if (!(
+            typeof value !== 'boolean' ||
+            typeof value !== 'number' ||
+            typeof value !== 'string' ||
+            value instanceof Array
+        )) throw new Error('permission value string or array required');
 
         this._requires[name] = value;
 
@@ -141,8 +147,14 @@ export default class Permission {
 
         for (const name in this._requires) {
             const [ key, reference ] = this.traverse(name, data);
+            const internal = this._requires[key];
+            const external = reference[key];
             if (key in reference) {
-                if (this._requires[key] === reference[key]) {
+                if (
+                    internal instanceof Array &&
+                    internal.includes(external) ||
+                    internal === external
+                ) {
                     continue;
                 } else {
                     return false;
