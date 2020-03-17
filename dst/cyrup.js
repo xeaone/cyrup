@@ -1,7 +1,7 @@
 
 /*
     Name: cyrup
-    Version: 0.7.9
+    Version: 0.8.0
     License: MPL-2.0
     Author: Alexander Elias
     Email: alex.steven.elias@gmail.com
