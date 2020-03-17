@@ -66,8 +66,8 @@ export default class Role {
     get (resource, action) {
         return this._permissions.find(
             permission =>
-            permission.action() === action &&
-            permission.resource() === resource
+                permission.action() === action &&
+                permission.resource() === resource
         );
     }
 
@@ -124,7 +124,7 @@ export default class Role {
             name: this._name,
             active: this._active,
             permissions: this._permissions.map(permission => permission.toJSON())
-        }
+        };
     }
 
 }

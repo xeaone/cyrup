@@ -1,11 +1,11 @@
 {
     "name": "cyrup",
-    "version": "0.7.8",
+    "version": "0.7.9",
     "description": "Crypto Library For Node & Browsers",
     "main": "dst/cyrup.js",
     "scripts": {
         "test": "node test",
-        "build": "node build.js",
+        "build": "rollup --config",
         "serve": "muleify -sw test",
         "watch": "muleify -pwbt src/cyrup.js test/cyrup.js"
     },
@@ -24,6 +24,8 @@
     },
     "homepage": "https://github.com/vokeio/cyrup#readme",
     "devDependencies": {
-        "muleify": "^5.3.1"
+        "@babel/core": "^7.8.7",
+        "babel-preset-minify": "^0.5.1",
+        "rollup-plugin-babel": "^4.4.0"
     }
 }
