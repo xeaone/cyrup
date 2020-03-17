@@ -24,16 +24,27 @@ export default [
             banner,
             format: 'es',
             indent: '    ',
-            file: 'dst/cyrup.js'
+            file: 'dst/cyrup.es.js'
         }
     },
     {
         input: 'src/cyrup.js',
         output: {
             banner,
-            format: 'es',
+            name: 'Cyrup',
+            format: 'umd',
             indent: '    ',
-            file: 'dst/cyrup.min.js'
+            file: 'dst/cyrup.umd.js'
+        }
+    },
+    {
+        input: 'src/cyrup.js',
+        output: {
+            banner,
+            name: 'Cyrup',
+            format: 'umd',
+            indent: '    ',
+            file: 'dst/cyrup.umd.min.js'
         },
         plugins: [ babel({ presets: [ 'minify' ], comments: false }) ]
     }

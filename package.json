@@ -1,12 +1,11 @@
 {
     "name": "cyrup",
-	"type": "module",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "description": "Crypto Library For Node & Browsers",
-    "main": "dst/cyrup.js",
+    "main": "dst/cyrup.umd.js",
     "scripts": {
         "test": "node test",
-        "build": "rollup --config",
+        "build": "rollup -c",
         "serve": "muleify -sw test",
         "watch": "muleify -pwbt src/cyrup.js test/cyrup.js"
     },
