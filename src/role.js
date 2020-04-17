@@ -17,8 +17,11 @@ export default class Role {
         if ('active' in role) this.active(active);
 
         if ('permissions' in role) {
-            if (permissions instanceof Array === false) throw new Error('role permissions illegal type');
-            permissions.forEach(permission => this.permission(permission));
+            if (permissions instanceof Array === false) {
+                throw new Error('role permissions illegal type');
+            } else {
+                permissions.forEach(permission => this.permission(permission));
+            }
         }
 
     }
@@ -78,10 +81,7 @@ export default class Role {
 
         const action = permission.action();
         const resource = permission.resource();
-
-        const exists = this._permissions.find(({ _resource, _action }) => {
-            return _resource === resource && _action === action;
-        });
+        const exists = this.get(resource, action);
 
         if (exists) throw new Error(`role add permission ${resource} ${action} exists`);
 
